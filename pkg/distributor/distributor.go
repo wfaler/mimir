@@ -49,6 +49,7 @@ import (
 	"github.com/grafana/mimir/pkg/util/httpgrpcutil"
 	util_log "github.com/grafana/mimir/pkg/util/log"
 	util_math "github.com/grafana/mimir/pkg/util/math"
+	"github.com/grafana/mimir/pkg/util/push"
 	"github.com/grafana/mimir/pkg/util/validation"
 )
 
@@ -613,9 +614,8 @@ func (d *Distributor) forwardingReq(ctx context.Context, userID string) forwardi
 }
 
 // PrePushLimitsHandler is used as HTTP middleware in front of PushWithCleanup method.
-func (d *Distributor) PrePushLimitsHandler(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
+func (d *Distributor) PrePushLimitsHandler(next push.Func) push.Func {
+	return func(ctx context.Context, req *push.Request) (*mimirpb.WriteResponse, error) {
 		// We will report *this* request in the error too.
 		inflight := d.inflightPushRequests.Inc()
 		defer d.inflightPushRequests.Dec()
@@ -623,19 +623,17 @@ func (d *Distributor) PrePushLimitsHandler(next http.Handler) http.Handler {
 		if err := d.checkPrePushLimits(ctx, inflight); err != nil {
 			resp, ok := httpgrpc.HTTPResponseFromError(err)
 			if !ok {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
+				return nil, err
 			}
 			if resp.GetCode() != 202 {
 				logger := util_log.WithContext(ctx, util_log.Logger)
 				level.Error(logger).Log("msg", "push error", "err", err)
 			}
-			http.Error(w, string(resp.Body), int(resp.Code))
-			return
+			return nil, err
 		}
 
-		next.ServeHTTP(w, r)
-	})
+		return next(ctx, req)
+	}
 }
 
 // checkPrePushLimits checks limits that can be validated before reading the whole request.
@@ -681,25 +679,34 @@ func (d *Distributor) Push(ctx context.Context, req *mimirpb.WriteRequest) (*mim
 		cleanup()
 		return nil, err
 	}
-	return d.PushWithCleanup(ctx, req, cleanup)
+
+	r := push.NewParsedRequest(req)
+	r.Cleanups = []func(){cleanup}
+	r.Context = ctx
+
+	return d.PrePushLimitsHandler(d.PushWithCleanup)(ctx, r)
 }
 
 // PushWithCleanup takes a WriteRequest and distributes it to ingesters using the ring.
 // Strings in `req` may be pointers into the gRPC buffer which will be reused, so must be copied if retained.
 // PushWithCleanup does not check limits like ingestion rate and inflight requests.
 // These limits are checked either by Push gRPC method (when invoked via gRPC) or PrePushLimitsHandler (when invoked via HTTP)
-func (d *Distributor) PushWithCleanup(ctx context.Context, req *mimirpb.WriteRequest, callerCleanup func()) (*mimirpb.WriteResponse, error) {
+func (d *Distributor) PushWithCleanup(ctx context.Context, pushReq *push.Request) (*mimirpb.WriteResponse, error) {
+	req, err := pushReq.WriteRequest()
+	if err != nil {
+		return nil, err
+	}
 	reqSize := int64(req.Size())
 	inflightBytes := d.inflightPushRequestsBytes.Add(reqSize)
 	cleanupInDefer := true
-	cleanup := func() {
-		callerCleanup()
+	pushReq.Cleanups = append(pushReq.Cleanups, func() {
 		d.inflightPushRequestsBytes.Sub(reqSize)
-	}
+
+	})
 
 	defer func() {
 		if cleanupInDefer {
-			cleanup()
+			pushReq.CleanUp()
 		}
 	}()
 
@@ -949,7 +956,7 @@ func (d *Distributor) PushWithCleanup(ctx context.Context, req *mimirpb.WriteReq
 		}
 
 		return d.send(localCtx, ingester, timeseries, metadata, req.Source)
-	}, func() { cleanup(); cancel() })
+	}, func() { pushReq.CleanUp(); cancel() })
 
 	if forwardingErrCh != nil {
 		// Blocks until the forwarding requests have completed and the final status has been pushed through this chan.
