@@ -487,8 +487,8 @@ github.com/grafana/mimir-prometheus v0.0.0-20220822125643-4aa6d561a134 h1:dS8d6j
 github.com/grafana/mimir-prometheus v0.0.0-20220822125643-4aa6d561a134/go.mod h1:y+uCk/SdO73g9bMtjCZbejjmcjY4X+xLuKN7cBor5UE=
 github.com/grafana/regexp v0.0.0-20220304095617-2e8d9baf4ac2 h1:uirlL/j72L93RhV4+mkWhjv0cov2I0MIgPOG9rMDr1k=
 github.com/grafana/regexp v0.0.0-20220304095617-2e8d9baf4ac2/go.mod h1:M5qHK+eWfAv8VR/265dIuEpL3fNfeC21tXXp9itM24A=
-github.com/grafana/thanos v0.19.1-0.20220809170552-5e929a767b26 h1:Kyb3BTqmvqT/OrO3VCNQCq9Ge1L5ZAmrNFmlMUv4OhE=
-github.com/grafana/thanos v0.19.1-0.20220809170552-5e929a767b26/go.mod h1:9J64R7EevVFHYUMaNMF6dzmYaRvuxEKKUYzDatC6+m8=
+github.com/grafana/thanos v0.19.1-0.20220826163941-f0baf15049a6 h1:B5vUXBbadFMoKD795wtg8UqtvXPtRitfzScAvUtzysM=
+github.com/grafana/thanos v0.19.1-0.20220826163941-f0baf15049a6/go.mod h1:sklyj/ttQrL8iY3g/pQEAdIhayKW4HvOpbA7TEYK0Xs=
 github.com/grpc-ecosystem/go-grpc-middleware v1.1.0/go.mod h1:f5nM7jw/oeRSadq3xCzHAvxcr8HZnzsqU6ILg/0NiiE=
 github.com/grpc-ecosystem/go-grpc-middleware v1.3.0 h1:+9834+KizmvFV7pXQGSXQTsaWhq2GjuNUt0aUU0YBYw=
 github.com/grpc-ecosystem/go-grpc-middleware v1.3.0/go.mod h1:z0ButlSOZa5vEBq9m2m2hlwIgKw+rp3sdCBRoJY+30Y=
