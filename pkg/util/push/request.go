@@ -3,9 +3,12 @@
 package push
 
 import (
+	"fmt"
+
 	"github.com/grafana/mimir/pkg/mimirpb"
 )
 
+// supplierFunc should return either a non-nil body or a non-nil error. The cleanup function can be nil.
 type supplierFunc func() (*mimirpb.WriteRequest, func(), error)
 
 // Request represents a push request. It allows lazy body reading from the underlying http request
@@ -15,9 +18,8 @@ type Request struct {
 
 	getRequest supplierFunc
 
-	supplied bool
-	request  *mimirpb.WriteRequest
-	err      error
+	request *mimirpb.WriteRequest
+	err     error
 }
 
 func newRequest(p supplierFunc) *Request {
@@ -36,13 +38,16 @@ func NewParsedRequest(r *mimirpb.WriteRequest) *Request {
 // WriteRequest returns request from supplier function. Function is only called once,
 // and subsequent calls to WriteRequest return the same value.
 func (r *Request) WriteRequest() (*mimirpb.WriteRequest, error) {
-	if !r.supplied {
+	if r.request == nil && r.err == nil {
 		var cleanup func()
 		r.request, cleanup, r.err = r.getRequest()
+		if r.request == nil && r.err == nil {
+			return nil, fmt.Errorf("push.Request supplierFunc returned a nil body and a nil error, either should be non-nil")
+		}
+
 		if cleanup != nil {
 			r.AddCleanup(cleanup)
 		}
-		r.supplied = true
 	}
 	return r.request, r.err
 }

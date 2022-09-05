@@ -11,7 +11,7 @@ import (
 )
 
 var noopParser = supplierFunc(func() (*mimirpb.WriteRequest, func(), error) {
-	return nil, nil, nil
+	return &mimirpb.WriteRequest{}, nil, nil
 })
 
 func TestRequest_CleanUpOrder(t *testing.T) {
@@ -36,7 +36,7 @@ func TestRequest_WriteRequestIsParsedOnlyOnce(t *testing.T) {
 	parseCount := 0
 	p := supplierFunc(func() (*mimirpb.WriteRequest, func(), error) {
 		parseCount++
-		return nil, nil, nil
+		return &mimirpb.WriteRequest{}, nil, nil
 	})
 
 	r := newRequest(p)
