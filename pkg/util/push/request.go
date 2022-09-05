@@ -44,16 +44,16 @@ func (r *Request) WriteRequest() (*mimirpb.WriteRequest, error) {
 		if r.request == nil && r.err == nil {
 			return nil, fmt.Errorf("push.Request supplierFunc returned a nil body and a nil error, either should be non-nil")
 		}
-
-		if cleanup != nil {
-			r.AddCleanup(cleanup)
-		}
+		r.AddCleanup(cleanup)
 	}
 	return r.request, r.err
 }
 
-// AddCleanup adds a function that will be called once CleanUp is called.
+// AddCleanup adds a function that will be called once CleanUp is called. If f is nil, it will not be invoked.
 func (r *Request) AddCleanup(f func()) {
+	if f == nil {
+		return
+	}
 	r.cleanups = append(r.cleanups, f)
 }
 
