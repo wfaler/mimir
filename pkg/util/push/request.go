@@ -42,7 +42,7 @@ func (r *Request) WriteRequest() (*mimirpb.WriteRequest, error) {
 		var cleanup func()
 		r.request, cleanup, r.err = r.getRequest()
 		if r.request == nil && r.err == nil {
-			return nil, fmt.Errorf("push.Request supplierFunc returned a nil body and a nil error, either should be non-nil")
+			r.err = fmt.Errorf("push.Request supplierFunc returned a nil body and a nil error, either should be non-nil")
 		}
 		r.AddCleanup(cleanup)
 	}
