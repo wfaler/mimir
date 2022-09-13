@@ -33,16 +33,6 @@ type bufHolder struct {
 	buf []byte
 }
 
-// putBack puts the buffer back into bufferPool. If the provided buffer has a larger capacity than b,
-// then it replaces the internal buffer of b.
-func (b *bufHolder) putBack(buf []byte) {
-	if buf = buf[:cap(buf)]; len(buf) > len(b.buf) {
-		b.buf = buf
-	}
-
-	bufferPool.Put(b)
-}
-
 var bufferPool = sync.Pool{
 	New: func() interface{} { return &bufHolder{buf: make([]byte, 256*1024)} },
 }
@@ -104,8 +94,12 @@ func handler(maxRecvMsgSize int,
 					err = httpgrpc.Errorf(http.StatusBadRequest, err.Error())
 				}
 
-				bufHolder.putBack(buf)
+				bufferPool.Put(bufHolder)
 				return nil, nil, err
+			}
+			// If decoding allocated a bigger buffer, put that one back in the pool.
+			if buf = buf[:cap(buf)]; len(buf) > len(bufHolder.buf) {
+				bufHolder.buf = buf
 			}
 
 			if allowSkipLabelNameValidation {
@@ -116,7 +110,7 @@ func handler(maxRecvMsgSize int,
 
 			cleanup := func() {
 				mimirpb.ReuseSlice(req.Timeseries)
-				bufHolder.putBack(buf)
+				bufferPool.Put(bufHolder)
 			}
 			return &req.WriteRequest, cleanup, nil
 		}
