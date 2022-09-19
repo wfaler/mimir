@@ -133,8 +133,6 @@ type Distributor struct {
 	sampleDelayHistogram             prometheus.Histogram
 	replicationFactor                prometheus.Gauge
 	latestSeenSampleTimestampPerUser *prometheus.GaugeVec
-
-	PushWithMiddlewares push.Func
 }
 
 // Config contains the configuration required to
@@ -407,8 +405,6 @@ func New(cfg Config, clientConfig ingester_client.Config, limits *validation.Ove
 		subservices = append(subservices, d.forwarder)
 	}
 
-	d.PushWithMiddlewares = d.wrapPushWithMiddlewares(d.PushWithCleanup)
-
 	subservices = append(subservices, d.ingesterPool, d.activeUsers)
 	d.subservices, err = services.NewManager(subservices...)
 	if err != nil {
@@ -634,7 +630,8 @@ func (d *Distributor) validateSeries(nowt time.Time, ts mimirpb.PreallocTimeseri
 	return nil
 }
 
-func (d *Distributor) wrapPushWithMiddlewares(next push.Func) push.Func {
+// WrapPushWithMiddlewares returns push function wrapped in all Distributor's middlewares.
+func (d *Distributor) WrapPushWithMiddlewares(next push.Func) push.Func {
 	var middlewares []func(push.Func) push.Func
 
 	// The middlewares will be applied to the request (!) in the specified order, from first to last.
@@ -902,7 +899,7 @@ func (d *Distributor) forwardSamples(ctx context.Context, userID string, ts []mi
 
 // Push implements client.IngesterServer
 func (d *Distributor) Push(ctx context.Context, req *mimirpb.WriteRequest) (*mimirpb.WriteResponse, error) {
-	return d.PushWithMiddlewares(ctx, req, func() { mimirpb.ReuseSlice(req.Timeseries) })
+	return d.WrapPushWithMiddlewares(d.PushWithCleanup)(ctx, req, func() { mimirpb.ReuseSlice(req.Timeseries) })
 }
 
 // PushWithCleanup takes a WriteRequest and distributes it to ingesters using the ring.

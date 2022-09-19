@@ -2988,7 +2988,7 @@ func TestInstanceLimitsBeforeHaDedupe(t *testing.T) {
 		enableTracker:       true,
 		maxInflightRequests: 1,
 	})
-	wrappedMockPush := ds[0].wrapPushWithMiddlewares(mockPush)
+	wrappedMockPush := ds[0].WrapPushWithMiddlewares(mockPush)
 
 	// Make sure first request hits the limit.
 	ds[0].inflightPushRequests.Inc()
@@ -3192,7 +3192,7 @@ func TestHaDedupeAndRelabelBeforeForwarding(t *testing.T) {
 		forwarding:      true,
 		getForwarder:    getForwarder,
 	})
-	wrappedMockPush := ds[0].wrapPushWithMiddlewares(mockPush)
+	wrappedMockPush := ds[0].WrapPushWithMiddlewares(mockPush)
 
 	// Submit the two write requests into the wrapped mock push function, it should:
 	// 1) Perform HA-deduplication
