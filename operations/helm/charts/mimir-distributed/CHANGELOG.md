@@ -25,6 +25,8 @@ Entries should include a reference to the Pull Request that introduced the chang
 
 ## main / unreleased
 
+* [CHANGE] Change default securityContext of Mimir and GEM pods and containers so that they comply with a [Restricted pod security policy](https://kubernetes.io/docs/concepts/security/pod-security-standards/). This changes the user the containers run as from root to 10001. The files in the attached volumes to the pods should change ownership with the `fsGroup` change. Most CSI drivers support `fsGroup` or kubelet is able to do the ownership change instead of the CSI driver. This is not the case for the HostPath driver. If you are using HostPath or another driver that doesn't support `fsGroup`, then set the `securityContext` of all Mimir and GEM components to `{}` in your values file. If left as the default and `fsGroup` is not supported, components will fail to start. #3007
+* [CHANGE] Restrict pod seccomp profile to `runtime/default` in the default PodSecurityPolicy of the chart. #3007
 * [ENHANCEMENT] Metamonitoring: If enabled and no URL is configured, then metamonitoring metrics will be sent to
   Mimir under the `metamonitoring` tenant; this enhancement does not apply to GEM. #3176
 
