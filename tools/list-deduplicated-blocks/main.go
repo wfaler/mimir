@@ -22,7 +22,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/thanos-io/objstore"
-	"github.com/thanos-io/thanos/pkg/extprom"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/grafana/mimir/pkg/compactor"
@@ -71,13 +70,9 @@ func main() {
 
 	df := compactor.NewShardAwareDeduplicateFilter()
 
-	s := extprom.NewTxGaugeVec(
-		nil,
-		prometheus.GaugeOpts{
-			Name: "synced",
-			Help: "Number of block metadata synced",
-		},
-		[]string{"state"}, []string{"duplicate"})
+	s := prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "synced", Help: "Number of block metadata synced"},
+		[]string{"state"})
+	s.WithLabelValues("duplicate")
 
 	log.Println("Running filter")
 	err = df.Filter(ctx, metasMap, s, nil)

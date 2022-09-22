@@ -18,7 +18,6 @@ import (
 	"github.com/oklog/ulid"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/prometheus/model/timestamp"
-	"github.com/thanos-io/thanos/pkg/extprom"
 
 	"github.com/grafana/mimir/pkg/compactor"
 	"github.com/grafana/mimir/pkg/storage/bucket"
@@ -87,9 +86,9 @@ func main() {
 		metas[b.ID].Thanos.Labels[mimir_tsdb.CompactorShardIDExternalLabel] = b.CompactorShardID // Needed for correct planning.
 	}
 
-	synced := extprom.NewTxGaugeVec(nil, prometheus.GaugeOpts{Name: "synced", Help: "Number of block metadata synced"},
-		[]string{"state"}, []string{block.MarkedForNoCompactionMeta},
-	)
+	synced := prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "synced", Help: "Number of block metadata synced"},
+		[]string{"state"})
+	synced.WithLabelValues(block.MarkedForNoCompactionMeta)
 
 	for _, f := range []block.MetadataFilter{
 		// No need to exclude blocks marked for deletion, as we did that above already.
