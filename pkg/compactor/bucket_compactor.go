@@ -24,7 +24,6 @@ import (
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/prometheus/prometheus/tsdb"
 	"github.com/thanos-io/objstore"
-	"github.com/thanos-io/thanos/pkg/compact/downsample"
 	"github.com/thanos-io/thanos/pkg/errutil"
 	"github.com/thanos-io/thanos/pkg/runutil"
 	"go.uber.org/atomic"
@@ -34,14 +33,6 @@ import (
 	"github.com/grafana/mimir/pkg/storage/tsdb/block"
 	"github.com/grafana/mimir/pkg/storage/tsdb/bucketindex"
 	"github.com/grafana/mimir/pkg/storage/tsdb/metadata"
-)
-
-type ResolutionLevel int64
-
-const (
-	ResolutionLevelRaw = ResolutionLevel(downsample.ResLevel0)
-	ResolutionLevel5m  = ResolutionLevel(downsample.ResLevel1)
-	ResolutionLevel1h  = ResolutionLevel(downsample.ResLevel2)
 )
 
 type DeduplicateFilter interface {
