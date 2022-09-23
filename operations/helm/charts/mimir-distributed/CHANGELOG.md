@@ -25,10 +25,12 @@ Entries should include a reference to the Pull Request that introduced the chang
 
 ## main / unreleased
 
+* [CHANGE] **breaking change** Reduce the number of ingesters in small.yaml form 4 to 3. This should be more accurate size for the scale of 1M AS. Before upgrading refer to [Scaling down ingesters](https://grafana.com/docs/mimir/latest/operators-guide/run-production-environment/scaling-out/#scaling-down-ingesters) to scale down `ingester-3`. Alternatively override the number of ingesters to 4. #3035
 * [ENHANCEMENT] Metamonitoring: If enabled and no URL is configured, then metamonitoring metrics will be sent to
   Mimir under the `metamonitoring` tenant; this enhancement does not apply to GEM. #3176
 * [ENHANCEMENT] Improve default rollout strategies. Now distributor, overrides_exporter, querier, query_frontend, admin_api, gateway, and graphite components can be upgraded more quickly and also can be rolled out with a single replica without downtime. #3029
 * [ENHANCEMENT] Metamonitoring: make scrape interval configurable. #2945
+* [ENHANCEMENT] Update sizing plans (small.yaml, large.yaml, capped-small.yaml, capped-large.yaml). These reflect better how we recommend running Mimir and GEM in production. #3035
 * [BUGFIX] Fix an issue that caused metamonitoring secrets to be created incorrectly #3170
 
 ## 3.2.0
