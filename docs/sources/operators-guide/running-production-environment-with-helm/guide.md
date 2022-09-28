@@ -199,11 +199,13 @@ for more details.
 
 The mimir-distributed Helm chart makes it easy to collect metrics and logs from Mimir. It takes care of assigning the
 right labels so that the dashboards and alerts work out of the box. The chart ships metrics to a Prometheus-compatible
-remote and logs to a Loki cluster. 
+remote and logs to a Loki cluster.
 
 If you are using the latest mimir-distributed Helm chart:
+
 1. Download the Grafana Agent Operator CRDs from https://github.com/grafana/agent/tree/main/production/operator/crds
 2. Install the CRDs in your cluster
+
    ```bash
    kubectl apply -f production/operator/crds/
    ```
@@ -217,13 +219,13 @@ If you are using the latest mimir-distributed Helm chart:
      grafanaAgent:
        enabled: true
        installOperator: true
-   
+
        logs:
          remote:
            url: "https://example.com/loki/api/v1/push"
            auth:
              username: 12345
-   
+
        metrics:
          remote:
            url: "https://mimir-nginx.mimir.svc.cluster.local./api/v1/push"

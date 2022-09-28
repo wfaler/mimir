@@ -178,10 +178,11 @@ sum(max_over_time(alertmanager_alerts[24h]))
 ### (Optional) Caches
 
 Grafana Mimir supports caching in various stages of the read path:
-* results cache to cache partial query results 
-* chunks cache to cache timeseries chunks from the object store
-* index cache to accelerate looking up series and labels lookups
-* metadata cache to accelerate looking up individual timeseries blocks
+
+- results cache to cache partial query results
+- chunks cache to cache timeseries chunks from the object store
+- index cache to accelerate looking up series and labels lookups
+- metadata cache to accelerate looking up individual timeseries blocks
 
 A rule of thumb for scaling memcached deployments for these caches is to look at the rate of evictions. If it 0 during
 steady load and only with occasional spikes, then memcached is sufficiently scaled. If it is >0 all the time, then

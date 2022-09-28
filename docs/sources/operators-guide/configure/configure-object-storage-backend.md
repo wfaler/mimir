@@ -46,7 +46,7 @@ common:
       endpoint: s3.us-east-2.amazonaws.com
       region: us-east
       secret_access_key: "${AWS_SECRET_ACCESS_KEY}" # This is a secret injected via an environment variable
-      access_key_id: "${AWS_ACCESS_KEY_ID}"         # This is a secret injected via an environment variable
+      access_key_id: "${AWS_ACCESS_KEY_ID}" # This is a secret injected via an environment variable
 
 blocks_storage:
   s3:
@@ -68,7 +68,7 @@ common:
   storage:
     backend: gcs
     gcs:
-      # This is an example to illustrate what the service account content should look like . 
+      # This is an example to illustrate what the service account content should look like.
       # We recommend injecting the service_account via an environment variable instead.
       service_account: |
         {
@@ -104,9 +104,9 @@ common:
   storage:
     backend: azure
   azure:
-    account_key: '${SWIFT_ACCOUNT_KEY}' # This is a secret injected via an environment variable
+    account_key: "${SWIFT_ACCOUNT_KEY}" # This is a secret injected via an environment variable
     account_name: mimir-prod
-    endpoint_suffix: 'blob.core.windows.net'
+    endpoint_suffix: "blob.core.windows.net"
 
 blocks_storage:
   azure:
