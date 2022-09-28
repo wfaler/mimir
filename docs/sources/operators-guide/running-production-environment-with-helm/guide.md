@@ -121,7 +121,7 @@ store_gateway:
           topology.kubernetes.io/zone: zone-c
 ```
 
-If you are **upgrading** a Mimir cluster, then refer to the [migration guide]() for enabling up zone aware replication.
+If you are **upgrading** a Mimir cluster, then refer to the [migration guide]({{< relref "../../migration-guide/migrating-from-single-zone-with-helm" >}}) for enabling up zone aware replication.
 
 ### Object storage
 
