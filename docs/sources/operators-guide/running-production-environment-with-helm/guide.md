@@ -1,52 +1,51 @@
 ---
-title: "Run in production using the Helm chart"
-menuTitle: "Run in production using the Helm chart"
-description: "Learn what's necessary to make the mimir-distributed Helm chart ready for production."
+title: "Prepare Grafana Mimir for production using the Helm chart"
+menuTitle: "Prepare Grafana Mimir for production using the Helm chart"
+description: "Prepare Grafana Mimir to ingest metrics in a production environment using the mimir-distributed Helm chart."
 weight: 90
 ---
 
-# Run in production using the Helm chart
+# Prepare Grafana Mimir for production using the Helm chart
 
-## Overview
+Beyond [Getting started with Grafana Mimir using the Helm chart]({{< relref "../deploy-grafana-mimir/getting-started-helm-charts" >}}),
+which covers setting up Grafana Mimir on a local Kubernetes cluster or
+within a low-risk development environment, you can prepare Grafana Mimir
+for production.
 
-[Getting started with Grafana Mimir using the Helm chart]({{< relref "../deploy-grafana-mimir/getting-started-helm-charts" >}}) already covered
-how to set up a Grafana Mimir on a local Kubernetes cluster or a small development environment. This article will guide
-you through the process of extending the foundation there and deploying Grafana Mimir to production.
+Although the information that follows assumes that you are using Grafana Mimir in
+a production environment that is customer-facing, you might need the
+high-availability and horizontal-scalability features of Grafana Mimir in an
+internal, development environment.
 
-"Production" has different meaning to different people. The meaning used in this article is for an environment where
-you want to benefit from the highly available and horizontally scalable features of Grafana Mimir. The deployment may be
-used to ingest metrics coming from a development environment or from a customer-facing one. Each section help you make
-a decision for whether this applies to your case or not.
+[//]: # (TODO revisit this paragraph)
+To achieve high availability, the Helm chart schedules Kubernetes Pods
+onto different Kubernetes Nodes. The chart also increases the scale of the
+Grafana Mimir cluster.
 
-### Main differences with the getting-started deployment
-
-The main differences between the deployment in [Getting started with Grafana Mimir using the Helm chart]({{< relref "../deploy-grafana-mimir/getting-started-helm-charts" >}})
-and the one in this guide are
-
-- the scheduling of Pods onto Kubernetes Nodes and the size of the Mimir cluster, and
-- using an object storage setup different from the MinIO deployment that comes with the mimir-distributed chart.
+[//]: # (TODO revisit this paragraph)
+- using an object storage setup different from the MinIO deployment that
+  comes with the mimir-distributed chart.
 
 ## Before you begin
 
-This guide has some prerequisites. Check if you meet all:
+Check if you meet all the follow prerequisites:
 
-- Familiarity with [Helm](https://helm.sh/docs/intro/quickstart/).
-- An external object storage different from the MinIO that mimir-distributed deploys.
-
-  The MinIO deployment in the chart is not intended for production use.
-  You can replace it with any S3-compatible service, GCS, Azure Blob Storage, or OpenStack Swift.
-  Alternatively you can [deploy MinIO yourself](https://min.io/docs/minio/kubernetes/upstream/index.html).
-
+- You are familiar with [Helm](https://helm.sh/docs/intro/quickstart/).
 - Add the grafana Helm repository to your local environment or to your CI/CD tooling:
 
   ```bash
   helm repo add grafana https://grafana.github.io/helm-charts
   helm repo update
   ```
+- You have an external object storage that is different from the MinIO
+  object storage that `mimir-distributed` deploys, because the MinIO
+  deployment in the Helm chart is only intended for getting started and is not  
+  intended for production use.
 
-## Guide
+  Instead, use any S3-compatible service, such as GCS, Azure Blob
+  Storage, OpenStack Swift.
 
-### Capacity planning and Pod scheduling
+## Capacity planning and Pod scheduling
 
 The mimir-distributed chart comes with two sizing plans:
 
@@ -68,7 +67,7 @@ For example:
 helm install mimir-prod grafana/mimir-distributed -f ./small.yaml
 ```
 
-#### Pod scheduling
+### Pod scheduling
 
 The small.yaml and large.yaml add Pod anti-affinity rules so that Pods in the ingester and store-gateway StatefulSets are
 scheduled on distinct Kubernetes Nodes. This increases the fault tolerance of the Mimir cluster. It also means that you
@@ -78,7 +77,7 @@ Refer to [Ingesters failure and data loss]({{< relref "../architecture/component
 and [Store-gateway: Blocks sharding and replication]({{< relref "../architecture/components/store-gateway/#blocks-sharding-and-replication">}})
 for more information about failure modes of those two components.
 
-##### Zone-aware replication
+#### Zone-aware replication
 
 Grafana Mimir supports [replication across availability zones]({{< relref "../configure/configuring-zone-aware-replication/">}}) within your Kubernetes cluster.
 This further increases fault tolerance of the Mimir cluster. We recommend that you enable this even if you don't currently have
@@ -123,7 +122,7 @@ store_gateway:
 
 If you are **upgrading** a Mimir cluster, then refer to the [migration guide]({{< relref "../../migration-guide/migrating-from-single-zone-with-helm" >}}) for enabling up zone aware replication.
 
-### Object storage
+## Object storage
 
 The getting-started deployment uses a small MinIO deployment. That deployment is not optimized for larger workloads.
 You can replace it with any S3-compatible service, GCS, Azure Blob Storage, or OpenStack Swift.
@@ -173,7 +172,7 @@ Alternatively you can [deploy MinIO yourself](https://min.io/docs/minio/kubernet
        #      bucket_name: gem-admin
    ```
 
-### Security
+## Security
 
 Grafana Mimir does not require any special permissions from the hosts it runs on. Because of this it can be deployed
 in environments that enforce the [Restricted security policy](https://kubernetes.io/docs/concepts/security/pod-security-standards/).
@@ -191,7 +190,7 @@ To enable the PodSecurityPolicy admission controller for your Kubernetes cluster
 [How do I turn on an admission controller?](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#how-do-i-turn-on-an-admission-controller)
 in the Kubernetes documentation.
 
-### Metamonitoring
+## Metamonitoring
 
 You can use ready Grafana dashboards, and Prometheus alerting and recording rules to monitor Mimir itself.
 See [Installing Grafana Mimir dashboards and alerts]({{< relref "../monitor-grafana-mimir/installing-dashboards-and-alerts/">}})
@@ -236,13 +235,13 @@ If you are using the latest mimir-distributed Helm chart:
 The article [Collecting metrics and logs from Grafana Mimir]({{< relref "../monitor-grafana-mimir/collecting-metrics-and-logs/">}})
 goes into greater detail of how to set up the credentials for this.
 
-### Configure clients to write metrics to Mimir
+## Configure clients to write metrics to Mimir
 
 Refer to [Configure Prometheus to write to Grafana Mimir]({{< relref "../deploy-grafana-mimir/getting-started-helm-charts/#configure-prometheus-to-write-to-grafana-mimir">}})
 and [Configure Grafana Agent to write to Grafana Mimir]({{< relref "../deploy-grafana-mimir/getting-started-helm-charts/#configure-grafana-agent-to-write-to-grafana-mimir">}})
 for details on how to configure each client to remote-write metrics to Mimir.
 
-#### High availability setup
+### High availability setup
 
 It is possible to set up redundant groups of clients to write metrics to Mimir. Refer to
 [Configuring mimir-distributed Helm Chart for high-availability deduplication with Consul]({{< relref "../configure/setting-ha-helm-deduplication-consul">}})
