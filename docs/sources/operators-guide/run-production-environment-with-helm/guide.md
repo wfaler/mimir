@@ -52,10 +52,46 @@ Meet all the follow prerequisites:
 
 ## Plan capacity
 
-Figure out how many reads you have per second.
-Figure out how many writes you have per second.
-- How many series do you have?
-  Figure out much retention that you need.
+The `mimir-distributed` Helm chart comes with two sizing plans:
+
+- For 1M series: [small.yaml](https://github.com/grafana/mimir/blob/main/operations/helm/charts/mimir-distributed/small.yaml)
+- For 10M series: [large.yaml](https://github.com/grafana/mimir/blob/main/operations/helm/charts/mimir-distributed/large.yaml)
+
+These sizing plans are estimated based on experience from operating Grafana 
+Mimir at Grafana Labs. The ideal size for your cluster depends on your 
+usage patterns. Therefore, use the sizing plans as starting
+point for sizing your Grafana Mimir cluster, rather than as strict guidelines.
+To get a better idea of how to plan capacity, refer to the YAML comments at 
+the beginning of `small.yaml` and `large.yaml` files, which relate to read and write workloads.
+See also [Planning Grafana Mimir capacity]({{< relref "../run-production-environment/planning-capacity.md" >}}).
+
+To use a sizing plan, copy it from the [mimir](https://github.com/grafana/mimir/blob/main/operations/helm/charts/mimir-distributed)
+GitHub repository, and pass it as a values file to the `helm` command.
+
+For example:
+
+```bash
+helm install mimir-prod grafana/mimir-distributed -f ./small.yaml
+```
+
+### Conform to fault-tolerance requirements
+
+As part of _Pod scheduling_, the `small.yaml` and `large.yaml` files add Pod 
+anti-affinity rules so that no two ingester Pods, nor two store-gateway 
+Pods, are scheduled on any given Kubernetes Node. This increases fault 
+tolerance of the Mimir cluster.
+
+You must create and add Nodes, such that the number of Nodes is equal to or 
+larger than either the number of ingester Pods or the number of store-gateway Pods, 
+whichever one is larger. Expressed as a formula, it reads as follows:
+
+```
+number_of_nodes >= max(number_of_ingesters_pods, number_of_store_gateway_pods)
+```
+
+For more information about the failure modes of either the ingester or store-gateway
+component, refer to [Ingesters failure and data loss]({{< relref "../architecture/components/ingester/#ingesters-failure-and-data-loss">}})
+or [Store-gateway: Blocks sharding and replication]({{< relref "../architecture/components/store-gateway/#blocks-sharding-and-replication">}}).
 
 ## Decide whether you need geographical redundancy, fast rolling updates, or both. (Zone awareness)
 
@@ -122,62 +158,14 @@ If you are upgrading from a previous `mimir-distributed` Helm chart version
 to v4.0, then refer to the [migration guide]({{< relref "../../migration-guide/migrating-from-single-zone-with-helm" >}}) to configure
 zone-aware replication.
 
-
-
-
-- Configure Mimir to use object storage. (Object storage)
-- Comply with security needs, which Grafana Mimir does for you. (compliance)
-- Monitoring the health of your Mimir cluster. (metamonitoring)
-- Where can I find out more information?
-
-
-
-
-
-
-
-The mimir-distributed chart comes with two sizing plans:
-
-- for 1M series - [small.yaml](https://github.com/grafana/mimir/blob/main/operations/helm/charts/mimir-distributed/small.yaml) and
-- for 10M series - [large.yaml](https://github.com/grafana/mimir/blob/main/operations/helm/charts/mimir-distributed/large.yaml).
-
-These sizing plans are estimations based on experience from operating Grafana Mimir at Grafana Labs.
-The ideal size for your cluster highly depends on your usage patterns. This means that you should use them as a starting
-point to sizing your Grafana Mimir cluster rather than strict instructions. For more details refer to
-to [Planning Grafana Mimir capacity]({{< relref "../run-production-environment/planning-capacity.md" >}}) and the
-YAML comments at the beginning of small.yaml and large.yaml.
-
-To use these sizing plans, copy them from the [mimir GitHub repository](https://github.com/grafana/mimir/blob/main/operations/helm/charts/mimir-distributed)
-and pass them as a values files to the `helm` command:
-
-For example:
-
-```bash
-helm install mimir-prod grafana/mimir-distributed -f ./small.yaml
-```
-
-### Pod scheduling
-
-The small.yaml and large.yaml add Pod anti-affinity rules so that Pods in the ingester and store-gateway StatefulSets are
-scheduled on distinct Kubernetes Nodes. This increases the fault tolerance of the Mimir cluster. It also means that you
-need at least as many Nodes in your cluster as store-gateway replicas or ingester replicas, whichever is bigger.
-
-Refer to [Ingesters failure and data loss]({{< relref "../architecture/components/ingester/#ingesters-failure-and-data-loss">}})
-and [Store-gateway: Blocks sharding and replication]({{< relref "../architecture/components/store-gateway/#blocks-sharding-and-replication">}})
-for more information about failure modes of those two components.
-
-#### VERB Zone-aware replication
-
-If you are **upgrading** a Mimir cluster, then refer to the [migration guide]({{< relref "../../migration-guide/migrating-from-single-zone-with-helm" >}}) for enabling up zone aware replication.
-
 ## Object storage
 
 The getting-started deployment uses a small MinIO deployment, which is not optimized for larger workloads.
 You can replace it with any S3-compatible service, GCS, Azure Blob Storage, or OpenStack Swift.
 Alternatively you can [deploy MinIO yourself](https://min.io/docs/minio/kubernetes/upstream/index.html).
 
-1. The sizing plans mentioned in [Capacity planning and Pod scheduling](#capacity-planning-and-pod-scheduling) disable the built-in MinIO deployment.
-   If you aren't using the sizing plans, add the following YAML to your values file:
+1. Add the following YAML to your values file, if you are not using the sizing 
+   plans that are mentioned in [Plan capacity](#plan-capacity):
 
    ```yaml
    minio:
