@@ -1,5 +1,7 @@
 ---
 title: "Prepare Grafana Mimir for production using the Helm chart"
+aliases:
+- docs/mimir/latest/operators-guide/run-production-environment-with-helm/
 menuTitle: "Prepare Grafana Mimir for production using the Helm chart"
 description: "Prepare Grafana Mimir to ingest metrics in a production environment using the mimir-distributed Helm chart."
 weight: 90
@@ -17,21 +19,24 @@ a production environment that is customer-facing, you might need the
 high-availability and horizontal-scalability features of Grafana Mimir in an
 internal, development environment.
 
-[//]: # (TODO revisit this paragraph)
+[//]: # (TODO revisit this paragraph after reading the whole topic to see if 
+            the intro still needs some information)
 To achieve high availability, the Helm chart schedules Kubernetes Pods
-onto different Kubernetes Nodes. The chart also increases the scale of the
-Grafana Mimir cluster.
+onto different Kubernetes Nodes. Also, the chart increases the scale
+of the Grafana Mimir cluster.
 
-[//]: # (TODO revisit this paragraph)
+[//]: # (TODO revisit this paragraph after reading the whole topic to see if 
+            the intro still needs some information)
 - using an object storage setup different from the MinIO deployment that
   comes with the mimir-distributed chart.
 
 ## Before you begin
 
-Check if you meet all the follow prerequisites:
+Meet all the follow prerequisites:
 
 - You are familiar with [Helm](https://helm.sh/docs/intro/quickstart/).
-- Add the grafana Helm repository to your local environment or to your CI/CD tooling:
+
+  Add the grafana Helm repository to your local environment or to your CI/CD tooling:
 
   ```bash
   helm repo add grafana https://grafana.github.io/helm-charts
@@ -45,7 +50,91 @@ Check if you meet all the follow prerequisites:
   Instead, use any S3-compatible service, such as GCS, Azure Blob
   Storage, OpenStack Swift.
 
-## Capacity planning and Pod scheduling
+## Plan capacity
+
+Figure out how many reads you have per second.
+Figure out how many writes you have per second.
+- How many series do you have?
+  Figure out much retention that you need.
+
+## Decide whether you need geographical redundancy, fast rolling updates, or both. (Zone awareness)
+
+You can use a rolling update strategy to apply configuration changes to
+Grafana Mimir, and to upgrade Grafana Mimir to a newer version. A
+rolling update results in no downtime to Grafana Mimir.
+
+The Helm chart performs a rolling update for you. To make sure that rolling updates are faster,
+configure the Helm chart to deploy Grafana Mimir with zone-aware replication.
+
+### New installations
+
+Grafana Mimir supports [replication across availability zones]({{< relref "../configure/configuring-zone-aware-replication/">}})
+within your Kubernetes cluster.
+This further increases fault tolerance of the Mimir cluster. Even if you
+do not currently have multiple zones across your Kubernetes cluster, you
+can avoid having to extraneously migrate your cluster when you start using
+multiple zones.
+
+For `mimir-distributed` Helm chart v4.0 or higher, zone-awareness is enabled by
+default for new installations.
+
+To benefit from zone-awareness, choose the node selectors for your different
+zones. For convenience, you can use the following YAML configuration snippet
+as a starting point:
+
+[//]: # (TODO: check if this is actually the correct yaml after github.com/grafana/mimir/pull/2778 is merged)
+
+```yaml
+ingester:
+  zoneAwareReplication:
+    enabled: true
+    topologyKey: kubernetes.io/hostname
+    zones:
+      - name: zone-a
+        nodeSelector:
+          topology.kubernetes.io/zone: zone-a
+      - name: zone-b
+        nodeSelector:
+          topology.kubernetes.io/zone: zone-b
+      - name: zone-c
+        nodeSelector:
+          topology.kubernetes.io/zone: zone-c
+
+store_gateway:
+  zoneAwareReplication:
+    enabled: true
+    topologyKey: kubernetes.io/hostname
+    zones:
+      - name: zone-a
+        nodeSelector:
+          topology.kubernetes.io/zone: zone-a
+      - name: zone-b
+        nodeSelector:
+          topology.kubernetes.io/zone: zone-b
+      - name: zone-c
+        nodeSelector:
+          topology.kubernetes.io/zone: zone-c
+```
+
+### Existing installations
+
+If you are upgrading from a previous `mimir-distributed` Helm chart version
+to v4.0, then refer to the [migration guide]({{< relref "../../migration-guide/migrating-from-single-zone-with-helm" >}}) to configure
+zone-aware replication.
+
+
+
+
+- Configure Mimir to use object storage. (Object storage)
+- Comply with security needs, which Grafana Mimir does for you. (compliance)
+- Monitoring the health of your Mimir cluster. (metamonitoring)
+- Where can I find out more information?
+
+
+
+
+
+
 
 The mimir-distributed chart comes with two sizing plans:
 
@@ -77,54 +166,13 @@ Refer to [Ingesters failure and data loss]({{< relref "../architecture/component
 and [Store-gateway: Blocks sharding and replication]({{< relref "../architecture/components/store-gateway/#blocks-sharding-and-replication">}})
 for more information about failure modes of those two components.
 
-#### Zone-aware replication
-
-Grafana Mimir supports [replication across availability zones]({{< relref "../configure/configuring-zone-aware-replication/">}}) within your Kubernetes cluster.
-This further increases fault tolerance of the Mimir cluster. We recommend that you enable this even if you don't currently have
-multiple zones in your Kubernetes cluster.
-
-If you are deploying a **fresh** installation of Mimir, then zone-awareness is enabled by default.
-You only need to choose the Node selectors for the different zones. You can use the following YAML to configure that:
-
-TODO: check if this is actually the correct yaml after github.com/grafana/mimir/pull/2778 is merged
-
-```yaml
-ingester:
-  zoneAwareReplication:
-    enabled: true
-    topologyKey: "kubernetes.io/hostname" # Triggers creating anti-affinity rules
-    zones:
-      - name: zone-a
-        nodeSelector:
-          topology.kubernetes.io/zone: zone-a
-      - name: zone-b
-        nodeSelector:
-          topology.kubernetes.io/zone: zone-b
-      - name: zone-c
-        nodeSelector:
-          topology.kubernetes.io/zone: zone-c
-
-store_gateway:
-  zoneAwareReplication:
-    enabled: true
-    topologyKey: "kubernetes.io/hostname" # Triggers creating anti-affinity rules
-    zones:
-      - name: zone-a
-        nodeSelector:
-          topology.kubernetes.io/zone: zone-a
-      - name: zone-b
-        nodeSelector:
-          topology.kubernetes.io/zone: zone-b
-      - name: zone-c
-        nodeSelector:
-          topology.kubernetes.io/zone: zone-c
-```
+#### VERB Zone-aware replication
 
 If you are **upgrading** a Mimir cluster, then refer to the [migration guide]({{< relref "../../migration-guide/migrating-from-single-zone-with-helm" >}}) for enabling up zone aware replication.
 
 ## Object storage
 
-The getting-started deployment uses a small MinIO deployment. That deployment is not optimized for larger workloads.
+The getting-started deployment uses a small MinIO deployment, which is not optimized for larger workloads.
 You can replace it with any S3-compatible service, GCS, Azure Blob Storage, or OpenStack Swift.
 Alternatively you can [deploy MinIO yourself](https://min.io/docs/minio/kubernetes/upstream/index.html).
 
