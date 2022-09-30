@@ -25,11 +25,6 @@ To achieve high availability, the Helm chart schedules Kubernetes Pods
 onto different Kubernetes Nodes. Also, the chart increases the scale
 of the Grafana Mimir cluster.
 
-[//]: # (TODO revisit this paragraph after reading the whole topic to see if 
-            the intro still needs some information)
-- using an object storage setup different from the MinIO deployment that
-  comes with the mimir-distributed chart.
-
 ## Before you begin
 
 Meet all the follow prerequisites:
@@ -44,11 +39,12 @@ Meet all the follow prerequisites:
   ```
 - You have an external object storage that is different from the MinIO
   object storage that `mimir-distributed` deploys, because the MinIO
-  deployment in the Helm chart is only intended for getting started and is not  
-  intended for production use.
+  deployment in the Helm chart is only intended for getting started and is not intended for production use.
 
-  Instead, use any S3-compatible service, such as GCS, Azure Blob
-  Storage, OpenStack Swift.
+  To use Grafana Mimir in production, you must replace the default object storage
+  with an Amazon S3 compatible service, Google Cloud Storage, Microsoft® Azure Blob Storage,
+  or OpenStack Swift. Alternatively, to deploy MinIO yourself, see [MinIO High
+  Performance Object Storage](https://min.io/docs/minio/kubernetes/upstream/index.html).
 
 ## Plan capacity
 
@@ -160,14 +156,8 @@ zone-aware replication.
 
 ## Configure Mimir to use object storage
 
-By default, the `mimir-distributed` Helm chart deploys a small MinIO object
-storage, which is not intended nor optimized for large workloads.
-To use Grafana Mimir in production, you must replace the default object storage
-with an Amazon S3 compatible service, Google Cloud Storage, Microsoft® Azure Blob Storage,
-or OpenStack Swift. Alternatively, to deploy MinIO yourself, see [MinIO High
-Performance Object Storage](https://min.io/docs/minio/kubernetes/upstream/index.html).
-
-**After choosing an object storage service, configure Grafana Mimir to use it:**
+For the different object storage types that Mimir supports, and examples,
+see [Configure Grafana Mimir object storage backend]({{< relref "../configure/configure-object-storage-backend" >}}).
 
 1. Add the following YAML to your values file, if you are not using the sizing
    plans that are mentioned in [Plan capacity](#plan-capacity):
@@ -177,12 +167,10 @@ Performance Object Storage](https://min.io/docs/minio/kubernetes/upstream/index.
      enabled: false
    ```
 
-2. Prepare the credentials and bucket names for the object storage. The article
-   [Configure Grafana Mimir object storage backend]({{< relref "../configure/configure-object-storage-backend" >}})
-   has examples for the different types of object storage that Mimir supports.
+2. Prepare the credentials and bucket names for the object storage.
 
 3. Add the object storage configuration to the Helm chart values. Nest the object storage configuration under
-   `mimir.structuredConfig`. This example uses S3:
+   `mimir.structuredConfig`. This example uses Amazon S3:
 
    ```yaml
    mimir:
@@ -206,57 +194,57 @@ Performance Object Storage](https://min.io/docs/minio/kubernetes/upstream/index.
          s3:
            bucket_name: mimir-ruler
 
-       # The admin_client configuration applies only to GEM deployments
+       # The following admin_client configuration only applies to Grafana Enterprise Metrics deployments:
        #admin_client:
        #  storage:
        #    s3:
        #      bucket_name: gem-admin
    ```
 
+## Meet security compliance regulations
 
-----------------------------
-- Comply with security needs, which Grafana Mimir does for you. (compliance)
-- Monitoring the health of your Mimir cluster. (metamonitoring)
-------------------------------
+Grafana Mimir does not require any special permissions on the hosts that it
+runs on. Because of this, you can deploy it in environments that enforce the
+Kubernetes [Restricted security policy](https://kubernetes.io/docs/concepts/security/pod-security-standards/).
 
-## Security
-
-Grafana Mimir does not require any special permissions from the hosts it runs on. Because of this it can be deployed
-in environments that enforce the [Restricted security policy](https://kubernetes.io/docs/concepts/security/pod-security-standards/).
-
-In Kubernetes >=1.23 the Restricted policy may be enforced via a namespace label on the namespace where Mimir will be installed:
+In Kubernetes v1.23 and higher, the Restricted policy can be enforced via a
+namespace label on the Namespace resource where Mimir is deployed. For example:
 
 ```
 pod-security.kubernetes.io/enforce: restricted
 ```
 
-In Kubernetes versions prior to 1.23, the mimir-distributed chart provides a
-[PodSecurityPolicy resource](https://v1-24.docs.kubernetes.io/docs/concepts/security/pod-security-policy/)
-which enforces a lot of the recommendations of the Restricted policy that the namespace label enforces.
-To enable the PodSecurityPolicy admission controller for your Kubernetes cluster refer to
-[How do I turn on an admission controller?](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#how-do-i-turn-on-an-admission-controller)
-in the Kubernetes documentation.
+In Kubernetes versions prior to 1.23, the `mimir-distributed` Helm chart
+provides a [PodSecurityPolicy resource](https://v1-24.docs.kubernetes.io/docs/concepts/security/pod-security-policy/)
+that enforces many of the recommendations from the Restricted policy that the
+namespace label enforces.
+To enable the PodSecurityPolicy admission controller for your Kubernetes
+cluster, refer to
+[How do I turn on an admission controller?](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#how-do-i-turn-on-an-admission-controller).
 
-## Metamonitoring
+## Monitor the health of your Grafana Mimir cluster
 
-You can use ready Grafana dashboards, and Prometheus alerting and recording rules to monitor Mimir itself.
-See [Installing Grafana Mimir dashboards and alerts]({{< relref "../monitor-grafana-mimir/installing-dashboards-and-alerts/">}})
-for more details.
+To monitor the health of your Grafana Mimir cluster, which is also known as
+_metamonitoring_, you can use ready-made Grafana dashboards, and Prometheus
+alerting and recording rules.
+For more information, see [Installing Grafana Mimir dashboards and alerts]({{<relref "../monitor-grafana-mimir/installing-dashboards-and-alerts/">}}).
 
-The mimir-distributed Helm chart makes it easy to collect metrics and logs from Mimir. It takes care of assigning the
-right labels so that the dashboards and alerts work out of the box. The chart ships metrics to a Prometheus-compatible
-remote and logs to a Loki cluster.
+The `mimir-distributed` Helm chart makes it easy for you to collect metrics and
+logs from Mimir. It assigns the correct labels for you so that the dashboards
+and alerts simply work. The chart uses the Grafana Agent to ship metrics to
+a Prometheus-compatible server and logs to a Loki or GEL (Grafana Enterprise
+Metrics) server.
 
-If you are using the latest mimir-distributed Helm chart:
-
-1. Download the Grafana Agent Operator CRDs from https://github.com/grafana/agent/tree/main/production/operator/crds
-2. Install the CRDs in your cluster
+1. Download the Grafana Agent Operator Custom Resource Definitions (CRDs) from
+   https://github.com/grafana/agent/tree/main/production/operator/crds
+2. Install the CRDs on your cluster:
 
    ```bash
    kubectl apply -f production/operator/crds/
    ```
 
-3. Add the following to your values file:
+3. Add the following YAML snippet to your
+   values file, to send metamonitoring telemetry from Mimir:
 
    ```yaml
    metaMonitoring:
@@ -279,17 +267,21 @@ If you are using the latest mimir-distributed Helm chart:
              X-Scope-OrgID: metamonitoring
    ```
 
-The article [Collecting metrics and logs from Grafana Mimir]({{< relref "../monitor-grafana-mimir/collecting-metrics-and-logs/">}})
-goes into greater detail of how to set up the credentials for this.
+   For details about how to set up the credentials, see [Collecting
+   metrics and logs from Grafana Mimir]({{< relref "../monitor-grafana-mimir/collecting-metrics-and-logs/">}}).
+
+Your Grafana Mimir cluster can now ingest metrics in production.
 
 ## Configure clients to write metrics to Mimir
 
-Refer to [Configure Prometheus to write to Grafana Mimir]({{< relref "../deploy-grafana-mimir/getting-started-helm-charts/#configure-prometheus-to-write-to-grafana-mimir">}})
-and [Configure Grafana Agent to write to Grafana Mimir]({{< relref "../deploy-grafana-mimir/getting-started-helm-charts/#configure-grafana-agent-to-write-to-grafana-mimir">}})
-for details on how to configure each client to remote-write metrics to Mimir.
+To configure each client to remote-write metrics to Mimir, refer to [Configure Prometheus to write to Grafana Mimir]({{< relref "../deploy-grafana-mimir/getting-started-helm-charts/#configure-prometheus-to-write-to-grafana-mimir">}})
+and [Configure Grafana Agent to write to Grafana Mimir]({{< relref "../deploy-grafana-mimir/getting-started-helm-charts/#configure-grafana-agent-to-write-to-grafana-mimir">}}).
 
-### High availability setup
+## Set up redundant Prometheus or Grafana Agent instances for high availability
 
-It is possible to set up redundant groups of clients to write metrics to Mimir. Refer to
-[Configuring mimir-distributed Helm Chart for high-availability deduplication with Consul]({{< relref "../configure/setting-ha-helm-deduplication-consul">}})
-for instructions on setting up a Consul instance, configuring Mimir, and configuring clients.
+If you need redundancy on the write path before it reaches Mimir, then you
+can set up redundant instances of Prometheus or Grafana Agent to
+write metrics to Mimir.
+
+For more information, see [Configuring mimir-distributed Helm Chart for
+high-availability deduplication with Consul]({{< relref "../configure/setting-ha-helm-deduplication-consul">}}).
