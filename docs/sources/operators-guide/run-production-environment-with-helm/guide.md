@@ -2,9 +2,9 @@
 title: "Prepare Grafana Mimir for production using the Helm chart"
 aliases:
 - docs/mimir/latest/operators-guide/run-production-environment-with-helm/
-menuTitle: "Prepare Grafana Mimir for production using the Helm chart"
-description: "Prepare Grafana Mimir to ingest metrics in a production environment using the mimir-distributed Helm chart."
-weight: 90
+  menuTitle: "Prepare Grafana Mimir for production using the Helm chart"
+  description: "Prepare Grafana Mimir to ingest metrics in a production environment using the mimir-distributed Helm chart."
+  weight: 90
 ---
 
 # Prepare Grafana Mimir for production using the Helm chart
@@ -57,11 +57,11 @@ The `mimir-distributed` Helm chart comes with two sizing plans:
 - For 1M series: [small.yaml](https://github.com/grafana/mimir/blob/main/operations/helm/charts/mimir-distributed/small.yaml)
 - For 10M series: [large.yaml](https://github.com/grafana/mimir/blob/main/operations/helm/charts/mimir-distributed/large.yaml)
 
-These sizing plans are estimated based on experience from operating Grafana 
-Mimir at Grafana Labs. The ideal size for your cluster depends on your 
+These sizing plans are estimated based on experience from operating Grafana
+Mimir at Grafana Labs. The ideal size for your cluster depends on your
 usage patterns. Therefore, use the sizing plans as starting
 point for sizing your Grafana Mimir cluster, rather than as strict guidelines.
-To get a better idea of how to plan capacity, refer to the YAML comments at 
+To get a better idea of how to plan capacity, refer to the YAML comments at
 the beginning of `small.yaml` and `large.yaml` files, which relate to read and write workloads.
 See also [Planning Grafana Mimir capacity]({{< relref "../run-production-environment/planning-capacity.md" >}}).
 
@@ -76,13 +76,13 @@ helm install mimir-prod grafana/mimir-distributed -f ./small.yaml
 
 ### Conform to fault-tolerance requirements
 
-As part of _Pod scheduling_, the `small.yaml` and `large.yaml` files add Pod 
-anti-affinity rules so that no two ingester Pods, nor two store-gateway 
-Pods, are scheduled on any given Kubernetes Node. This increases fault 
+As part of _Pod scheduling_, the `small.yaml` and `large.yaml` files add Pod
+anti-affinity rules so that no two ingester Pods, nor two store-gateway
+Pods, are scheduled on any given Kubernetes Node. This increases fault
 tolerance of the Mimir cluster.
 
-You must create and add Nodes, such that the number of Nodes is equal to or 
-larger than either the number of ingester Pods or the number of store-gateway Pods, 
+You must create and add Nodes, such that the number of Nodes is equal to or
+larger than either the number of ingester Pods or the number of store-gateway Pods,
 whichever one is larger. Expressed as a formula, it reads as follows:
 
 ```
@@ -93,7 +93,7 @@ For more information about the failure modes of either the ingester or store-gat
 component, refer to [Ingesters failure and data loss]({{< relref "../architecture/components/ingester/#ingesters-failure-and-data-loss">}})
 or [Store-gateway: Blocks sharding and replication]({{< relref "../architecture/components/store-gateway/#blocks-sharding-and-replication">}}).
 
-## Decide whether you need geographical redundancy, fast rolling updates, or both. (Zone awareness)
+## Decide whether you need geographical redundancy, fast rolling updates, or both.
 
 You can use a rolling update strategy to apply configuration changes to
 Grafana Mimir, and to upgrade Grafana Mimir to a newer version. A
@@ -158,13 +158,18 @@ If you are upgrading from a previous `mimir-distributed` Helm chart version
 to v4.0, then refer to the [migration guide]({{< relref "../../migration-guide/migrating-from-single-zone-with-helm" >}}) to configure
 zone-aware replication.
 
-## Object storage
+## Configure Mimir to use object storage
 
-The getting-started deployment uses a small MinIO deployment, which is not optimized for larger workloads.
-You can replace it with any S3-compatible service, GCS, Azure Blob Storage, or OpenStack Swift.
-Alternatively you can [deploy MinIO yourself](https://min.io/docs/minio/kubernetes/upstream/index.html).
+By default, the `mimir-distributed` Helm chart deploys a small MinIO object
+storage, which is not intended nor optimized for large workloads.
+To use Grafana Mimir in production, you must replace the default object storage
+with an Amazon S3 compatible service, Google Cloud Storage, Microsoft® Azure Blob Storage,
+or OpenStack Swift. Alternatively, to deploy MinIO yourself, see [MinIO High
+Performance Object Storage](https://min.io/docs/minio/kubernetes/upstream/index.html).
 
-1. Add the following YAML to your values file, if you are not using the sizing 
+**After choosing an object storage service, configure Grafana Mimir to use it:**
+
+1. Add the following YAML to your values file, if you are not using the sizing
    plans that are mentioned in [Plan capacity](#plan-capacity):
 
    ```yaml
@@ -172,7 +177,7 @@ Alternatively you can [deploy MinIO yourself](https://min.io/docs/minio/kubernet
      enabled: false
    ```
 
-2. Prepare credentials and bucket names for the object storage of your choice. The article
+2. Prepare the credentials and bucket names for the object storage. The article
    [Configure Grafana Mimir object storage backend]({{< relref "../configure/configure-object-storage-backend" >}})
    has examples for the different types of object storage that Mimir supports.
 
@@ -207,6 +212,12 @@ Alternatively you can [deploy MinIO yourself](https://min.io/docs/minio/kubernet
        #    s3:
        #      bucket_name: gem-admin
    ```
+
+
+----------------------------
+- Comply with security needs, which Grafana Mimir does for you. (compliance)
+- Monitoring the health of your Mimir cluster. (metamonitoring)
+------------------------------
 
 ## Security
 
