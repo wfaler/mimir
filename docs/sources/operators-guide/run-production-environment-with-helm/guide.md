@@ -19,12 +19,6 @@ a production environment that is customer-facing, you might need the
 high-availability and horizontal-scalability features of Grafana Mimir in an
 internal, development environment.
 
-[//]: # (TODO revisit this paragraph after reading the whole topic to see if 
-            the intro still needs some information)
-To achieve high availability, the Helm chart schedules Kubernetes Pods
-onto different Kubernetes Nodes. Also, the chart increases the scale
-of the Grafana Mimir cluster.
-
 ## Before you begin
 
 Meet all the follow prerequisites:
