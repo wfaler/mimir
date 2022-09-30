@@ -2,9 +2,9 @@
 title: "Prepare Grafana Mimir for production using the Helm chart"
 aliases:
 - docs/mimir/latest/operators-guide/run-production-environment-with-helm/
-  menuTitle: "Prepare Grafana Mimir for production using the Helm chart"
-  description: "Prepare Grafana Mimir to ingest metrics in a production environment using the mimir-distributed Helm chart."
-  weight: 90
+menuTitle: "Prepare Grafana Mimir for production using the Helm chart"
+description: "Prepare Grafana Mimir to ingest metrics in a production environment using the mimir-distributed Helm chart."
+weight: 90
 ---
 
 # Prepare Grafana Mimir for production using the Helm chart
