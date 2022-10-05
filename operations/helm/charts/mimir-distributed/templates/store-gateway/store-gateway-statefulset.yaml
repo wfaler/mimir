@@ -45,6 +45,11 @@ spec:
         {{- include "mimir.podAnnotations" (dict "ctx" . "component" "store-gateway") | nindent 8 }}
       namespace: {{ .Release.Namespace | quote }}
     spec:
+      {{- if .Values.ingester.persistentVolume.enabled }}
+      {{- if .Values.schedulerName }}
+      schedulerName: "{{ .Values.schedulerName }}"
+      {{- end }}
+      {{- end }}
       serviceAccountName: {{ template "mimir.serviceAccountName" . }}
       {{- if .Values.store_gateway.priorityClassName }}
       priorityClassName: {{ .Values.store_gateway.priorityClassName }}
