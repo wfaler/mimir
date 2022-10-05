@@ -7,7 +7,7 @@ metadata:
   annotations:
     {{- toYaml .Values.ingester.annotations | nindent 4 }}
   namespace: {{ .Release.Namespace | quote }}
-spec:  
+spec:
   podManagementPolicy: {{ .Values.ingester.podManagementPolicy }}
   replicas: {{ .Values.ingester.replicas }}
   selector:
