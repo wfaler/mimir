@@ -686,52 +686,77 @@ func (d *Distributor) prePushHaDedupeMiddleware(next push.Func) push.Func {
 			return next(ctx, req, cleanup)
 		}
 
-		haReplicaLabel := d.limits.HAReplicaLabel(userID)
-		cluster, replica := findHALabels(haReplicaLabel, d.limits.HAClusterLabel(userID), req.Timeseries[0].Labels)
-		// Make a copy of these, since they may be retained as labels on our metrics, e.g. dedupedSamples.
-		cluster, replica = copyString(cluster), copyString(replica)
+		haReplicaLabel, haClusterLabel := d.limits.HAReplicaLabel(userID), d.limits.HAClusterLabel(userID)
 
-		span := opentracing.SpanFromContext(ctx)
-		if span != nil {
-			span.SetTag("cluster", cluster)
-			span.SetTag("replica", replica)
+		type haReplica struct {
+			cluster, replica string
 		}
+		perReplicaSeries := map[haReplica][]mimirpb.PreallocTimeseries{}
 
+		for _, ts := range req.Timeseries {
+
+			cluster, replica := findHALabels(haReplicaLabel, haClusterLabel, ts.Labels)
+
+			// Make a copy of these, since they may be retained as labels on our metrics, e.g. dedupedSamples.
+			cluster, replica = copyString(cluster), copyString(replica)
+
+			span := opentracing.SpanFromContext(ctx)
+			if span != nil {
+				span.SetTag("cluster", cluster)
+				span.SetTag("replica", replica)
+			}
+
+			replicaKey := haReplica{replica: replica, cluster: cluster}
+			replicaSeries := perReplicaSeries[replicaKey]
+			replicaSeries = append(replicaSeries, ts)
+			perReplicaSeries[replicaKey] = replicaSeries
+		}
 		numSamples := 0
 		for _, ts := range req.Timeseries {
 			numSamples += len(ts.Samples)
 		}
 
-		removeReplica, err := d.checkSample(ctx, userID, cluster, replica)
-		if err != nil {
-			if errors.Is(err, replicasNotMatchError{}) {
-				// These samples have been deduped.
-				d.dedupedSamples.WithLabelValues(userID, cluster).Add(float64(numSamples))
-				return nil, httpgrpc.Errorf(http.StatusAccepted, err.Error())
+		var seriesToPush []mimirpb.PreallocTimeseries
+		for replicaKey, series := range perReplicaSeries {
+			cluster, replica := replicaKey.cluster, replicaKey.replica
+			removeReplica, err := d.checkSample(ctx, userID, cluster, replica)
+			if err != nil {
+				if errors.Is(err, replicasNotMatchError{}) {
+					// These samples have been deduped.
+					d.dedupedSamples.WithLabelValues(userID, cluster).Add(float64(numSamples))
+					return nil, httpgrpc.Errorf(http.StatusAccepted, err.Error())
+				}
+
+				if errors.Is(err, tooManyClustersError{}) {
+					d.discardedSamplesTooManyHaClusters.WithLabelValues(userID).Add(float64(numSamples))
+					return nil, httpgrpc.Errorf(http.StatusBadRequest, err.Error())
+				}
+
+				return nil, err
 			}
 
-			if errors.Is(err, tooManyClustersError{}) {
-				d.discardedSamplesTooManyHaClusters.WithLabelValues(userID).Add(float64(numSamples))
-				return nil, httpgrpc.Errorf(http.StatusBadRequest, err.Error())
+			if removeReplica {
+				// If we found both the cluster and replica labels, we only want to include the cluster label when
+				// storing series in Mimir. If we kept the replica label we would end up with another series for the same
+				// series we're trying to dedupe when HA tracking moves over to a different replica.
+				for _, ts := range series {
+					removeLabel(haReplicaLabel, &ts.Labels)
+				}
+				seriesToPush = append(seriesToPush, series...)
+			} else {
+				// If there wasn't an error but removeReplica is false that means we didn't find both HA labels.
+				d.nonHASamples.WithLabelValues(userID).Add(float64(numSamples))
+				continue
 			}
-
-			return nil, err
 		}
-
-		if removeReplica {
-			// If we found both the cluster and replica labels, we only want to include the cluster label when
-			// storing series in Mimir. If we kept the replica label we would end up with another series for the same
-			// series we're trying to dedupe when HA tracking moves over to a different replica.
-			for _, ts := range req.Timeseries {
-				removeLabel(haReplicaLabel, &ts.Labels)
-			}
-		} else {
-			// If there wasn't an error but removeReplica is false that means we didn't find both HA labels.
-			d.nonHASamples.WithLabelValues(userID).Add(float64(numSamples))
-		}
-
 		cleanupInDefer = false
-		return next(ctx, req, cleanup)
+		r := &mimirpb.WriteRequest{
+			Timeseries:              seriesToPush,
+			Source:                  req.Source,
+			Metadata:                req.Metadata,
+			SkipLabelNameValidation: req.SkipLabelNameValidation,
+		}
+		return next(ctx, r, cleanup)
 	}
 }
 

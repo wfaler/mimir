@@ -1880,7 +1880,7 @@ func BenchmarkDistributor_Push(b *testing.B) {
 				return metrics, samples
 			},
 			// not really an error but :shrug:
-			expectedErr: "",
+			expectedErr: "rpc error: code = Code(202) desc = replicas did not mach, rejecting sample:",
 		},
 	}
 
