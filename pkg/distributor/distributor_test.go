@@ -4031,6 +4031,12 @@ func (i *noopIngester) Push(ctx context.Context, req *mimirpb.WriteRequest, opts
 	return nil, nil
 }
 
+func (*noopIngester) Check(ctx context.Context, in *grpc_health_v1.HealthCheckRequest, opts ...grpc.CallOption) (*grpc_health_v1.HealthCheckResponse, error) {
+	return &grpc_health_v1.HealthCheckResponse{
+		Status: grpc_health_v1.HealthCheckResponse_SERVING,
+	}, nil
+}
+
 type stream struct {
 	grpc.ClientStream
 	i       int
