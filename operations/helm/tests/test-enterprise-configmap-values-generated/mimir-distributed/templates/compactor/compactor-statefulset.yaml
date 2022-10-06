@@ -32,6 +32,7 @@ spec:
         app.kubernetes.io/component: compactor
         app.kubernetes.io/part-of: memberlist
       annotations:
+        checksum/config: 896d996ab36b177f9dfae861559bb312beb5100eace4507b488cdee1a5d58472
         minio-secret-version: "42"
       namespace: "citestns"
     spec:

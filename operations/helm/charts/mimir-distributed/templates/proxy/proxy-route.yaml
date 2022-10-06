@@ -1,0 +1,24 @@
+{{- if .Values.proxy.route.enabled }}
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: {{ include "mimir.resourceName" (dict "ctx" . "component" "proxy") }}
+  labels:
+    {{- include "mimir.labels" (dict "ctx" . "component" "proxy") | nindent 4 }}
+  {{- with .Values.proxy.route.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  host: {{ .Values.proxy.route.host }}
+  to:
+    kind: Service
+    name: {{ include "mimir.proxy.service.name" . }}
+    weight: 100
+  port:
+    targetPort: http-metric
+{{- with .Values.proxy.route.tls }}
+  tls:
+    {{- toYaml . | nindent 4 }}
+{{- end }}
+{{- end }}

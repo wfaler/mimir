@@ -1,0 +1,3 @@
+{{- if .Values.proxy.enabled -}}
+{{- include "mimir.lib.serviceMonitor" (dict "ctx" $ "component" "proxy") }}
+{{- end -}}

@@ -34,6 +34,7 @@ spec:
         app.kubernetes.io/component: ruler
         app.kubernetes.io/part-of: memberlist
       annotations:
+        checksum/config: 5f4084347aa45d05b891e400b616ddd95427b0b8b5d5e65d72fec22ba5e2c39a
       namespace: "citestns"
     spec:
       serviceAccountName: graphite-enabled-values-mimir

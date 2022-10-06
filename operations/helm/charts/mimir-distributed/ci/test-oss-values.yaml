@@ -6,6 +6,10 @@ ci_resources: &ci_resources
   requests:
   limits:
 
+nginx:
+  ingress:
+    enabled: true
+
 global:
   extraEnvFrom:
     - secretRef:

@@ -7,8 +7,10 @@ remove a deprecated item from the third major release after it has been deprecat
 
 ### List
 
-* GEM gateway: remove port 8080 on the Service resource. Deprecated in 3.1.0 and will be removed in 6.x.x.
+* GEM gateway: remove port 8080 on the Service resource. Deprecated in 3.1.0 and will be removed in 6.0.0.
   * __How to migrate__: replace usages of port 8080 with port 80; these usages can be in dashboards, Prometheus remote-write configurations, or automation for updating rules.
+* GEM gateway and NGINX: configuration via `nginx` and `gateway` top-level values section is being replaced by the `proxy` section. Deprecated in 4.0.0 and will be removed in 7.0.0
+  * __How to migrate__: refer to [Migrate to using the unified proxy deployment for NGINX and GEM gateway](https://grafana.com/docs/mimir/latest/operators-guide/deploying-grafana-mimir/migrate-to-unified-proxy-deployment/)
 
 ## Format of changelog
 
@@ -25,9 +27,12 @@ Entries should include a reference to the Pull Request that introduced the chang
 
 ## main / unreleased
 
+* [FEATURE] Add `proxy` section that will soon replace `nginx` and `gateway`. For a migration guide refer to https://grafana.com/docs/mimir/latest/operators-guide/deploying-grafana-mimir/migrate-to-unified-proxy-deployment/
 * [ENHANCEMENT] Metamonitoring: If enabled and no URL is configured, then metamonitoring metrics will be sent to
   Mimir under the `metamonitoring` tenant; this enhancement does not apply to GEM. #3176
+* [ENHANCEMENT] The GEM gateway can now be disabled via the `gateway.enabled` value.
 * [BUGFIX] Fix an issue that caused metamonitoring secrets to be created incorrectly #3170
+
 
 ## 3.2.0
 

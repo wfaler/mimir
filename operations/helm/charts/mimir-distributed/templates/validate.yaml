@@ -156,3 +156,12 @@
 {{- fail "You have enabled nginx.autoscaling.targetMemoryUtilizationPercentage, you must also set nginx.resources.requests.memory." -}}
 {{- end -}}
 {{- end -}}
+
+{{- with .Values.proxy -}}
+{{- if and .autoscaling.enabled .autoscaling.targetCPUUtilizationPercentage (not ((.resources).requests).cpu) -}}
+{{- fail "You have enabled proxy.autoscaling.targetCPUUtilizationPercentage, you must also set proxy.resources.requests.cpu." -}}
+{{- end -}}
+{{- if and .autoscaling.enabled .autoscaling.targetMemoryUtilizationPercentage (not ((.resources).requests).memory) -}}
+{{- fail "You have enabled proxy.autoscaling.targetMemoryUtilizationPercentage, you must also set proxy.resources.requests.memory." -}}
+{{- end -}}
+{{- end -}}

@@ -32,6 +32,7 @@ spec:
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/component: query-frontend
       annotations:
+        checksum/config: 997d41859a3c148bd84b33b00644c3b20a4e715d484bda636c58bfde075560f4
       namespace: "citestns"
     spec:
       serviceAccountName: test-enterprise-values-mimir
