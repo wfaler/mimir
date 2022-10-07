@@ -8894,6 +8894,7 @@
             "Opaque": "",
             "User": null,
             "Host": "localhost:8080",
+            "OmitHost": false,
             "Path": "/alertmanager",
             "RawPath": "",
             "ForceQuery": false,
