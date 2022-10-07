@@ -85,9 +85,9 @@ func newStoreGatewayClientPool(discovery client.PoolServiceDiscovery, clientConf
 		TLS:                 clientConfig.TLS,
 	}
 	poolCfg := client.PoolConfig{
-		CheckInterval:      time.Minute,
+		CheckInterval:      5 * time.Second,
 		HealthCheckEnabled: true,
-		HealthCheckTimeout: 10 * time.Second,
+		HealthCheckTimeout: 1 * time.Second,
 	}
 
 	clientsCount := promauto.With(reg).NewGauge(prometheus.GaugeOpts{

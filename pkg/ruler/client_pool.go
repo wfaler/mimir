@@ -41,9 +41,9 @@ func (p *rulerClientsPool) GetClientFor(addr string) (RulerClient, error) {
 func newRulerClientPool(clientCfg grpcclient.Config, logger log.Logger, reg prometheus.Registerer) ClientsPool {
 	// We prefer sane defaults instead of exposing further config options.
 	poolCfg := client.PoolConfig{
-		CheckInterval:      time.Minute,
+		CheckInterval:      5 * time.Second,
 		HealthCheckEnabled: true,
-		HealthCheckTimeout: 10 * time.Second,
+		HealthCheckTimeout: 1 * time.Second,
 	}
 
 	clientsCount := promauto.With(reg).NewGauge(prometheus.GaugeOpts{
