@@ -85,9 +85,9 @@ func newStoreGatewayClientPool(discovery client.PoolServiceDiscovery, clientConf
 		TLS:                 clientConfig.TLS,
 	}
 	poolCfg := client.PoolConfig{
-		CheckInterval:      5 * time.Second,
+		CheckInterval:      clientConfig.PoolConfig.CleanupPeriod,
 		HealthCheckEnabled: true,
-		HealthCheckTimeout: 1 * time.Second,
+		HealthCheckTimeout: clientConfig.PoolConfig.RemoteTimeout,
 	}
 
 	clientsCount := promauto.With(reg).NewGauge(prometheus.GaugeOpts{
@@ -100,12 +100,21 @@ func newStoreGatewayClientPool(discovery client.PoolServiceDiscovery, clientConf
 	return client.NewPool("store-gateway", poolCfg, discovery, newStoreGatewayClientFactory(clientCfg, reg), clientsCount, logger)
 }
 
+// PoolConfig is config for creating a Pool of gRPC clients.
+type PoolConfig struct {
+	CleanupPeriod time.Duration `yaml:"cleanup_period" category:"advanced"`
+	RemoteTimeout time.Duration `yaml:"remote_timeout" category:"advanced"`
+}
+
 type ClientConfig struct {
 	TLSEnabled bool             `yaml:"tls_enabled" category:"advanced"`
 	TLS        tls.ClientConfig `yaml:",inline"`
+	PoolConfig PoolConfig       `yaml:",inline"`
 }
 
 func (cfg *ClientConfig) RegisterFlagsWithPrefix(prefix string, f *flag.FlagSet) {
 	f.BoolVar(&cfg.TLSEnabled, prefix+".tls-enabled", cfg.TLSEnabled, "Enable TLS for gRPC client connecting to store-gateway.")
+	f.DurationVar(&cfg.PoolConfig.CleanupPeriod, prefix+".cleanup-period", 5*time.Second, "How frequently to clean up clients for store-gateways that have gone away.")
+	f.DurationVar(&cfg.PoolConfig.RemoteTimeout, prefix+".remote-timeout", time.Second, "Timeout for detecting a store-gateway that has gone away.")
 	cfg.TLS.RegisterFlagsWithPrefix(prefix, f)
 }

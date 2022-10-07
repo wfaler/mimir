@@ -933,6 +933,15 @@ store_gateway_client:
   # CLI flag: -querier.store-gateway-client.tls-min-version
   [tls_min_version: <string> | default = ""]
 
+  # (advanced) How frequently to clean up clients for store-gateways that have
+  # gone away.
+  # CLI flag: -querier.store-gateway-client.cleanup-period
+  [cleanup_period: <duration> | default = 5s]
+
+  # (advanced) Timeout for detecting a store-gateway that has gone away.
+  # CLI flag: -querier.store-gateway-client.remote-timeout
+  [remote_timeout: <duration> | default = 1s]
+
 # (advanced) Fetch in-memory series from the minimum set of required ingesters,
 # selecting only ingesters which may have received series since
 # -querier.query-ingesters-within. If this setting is false or
