@@ -1812,6 +1812,28 @@
               "fieldFlag": "querier.store-gateway-client.tls-min-version",
               "fieldType": "string",
               "fieldCategory": "advanced"
+            },
+            {
+              "kind": "field",
+              "name": "cleanup_period",
+              "required": false,
+              "desc": "How frequently to clean up clients for store-gateways that have gone away.",
+              "fieldValue": null,
+              "fieldDefaultValue": 5000000000,
+              "fieldFlag": "querier.store-gateway-client.cleanup-period",
+              "fieldType": "duration",
+              "fieldCategory": "advanced"
+            },
+            {
+              "kind": "field",
+              "name": "remote_timeout",
+              "required": false,
+              "desc": "Timeout for detecting a store-gateway that has gone away.",
+              "fieldValue": null,
+              "fieldDefaultValue": 1000000000,
+              "fieldFlag": "querier.store-gateway-client.remote-timeout",
+              "fieldType": "duration",
+              "fieldCategory": "advanced"
             }
           ],
           "fieldValue": null,
@@ -8874,7 +8896,6 @@
             "Host": "localhost:8080",
             "Path": "/alertmanager",
             "RawPath": "",
-            "OmitHost": false,
             "ForceQuery": false,
             "RawQuery": "",
             "Fragment": "",
