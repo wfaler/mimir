@@ -9,6 +9,7 @@ metadata:
     app.kubernetes.io/instance: proxy-gem-values
     app.kubernetes.io/component: proxy
     app.kubernetes.io/managed-by: Helm
+  namespace: "citestns"
 spec:
   host: mimir.example.com
   to:
