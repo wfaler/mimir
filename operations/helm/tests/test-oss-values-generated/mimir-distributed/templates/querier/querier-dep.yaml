@@ -34,7 +34,6 @@ spec:
         app.kubernetes.io/component: querier
         app.kubernetes.io/part-of: memberlist
       annotations:
-        checksum/config: f726b5ee8ca1371161097b8d639d2f4f6cbe7d2ee61bcd369b053e67ffd0453a
         minio-secret-version: "42"
     spec:
       serviceAccountName: test-oss-values-mimir

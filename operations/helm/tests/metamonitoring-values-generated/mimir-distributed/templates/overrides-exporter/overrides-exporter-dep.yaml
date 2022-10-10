@@ -32,7 +32,6 @@ spec:
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/component: overrides-exporter
       annotations:
-        checksum/config: b791866d20d97b21b78e0d445f63f8862b4987e0099433ad6e9799b019af39d4
       namespace: "citestns"
     spec:
       serviceAccountName: metamonitoring-values-mimir

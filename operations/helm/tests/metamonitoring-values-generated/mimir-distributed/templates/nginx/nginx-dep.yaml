@@ -24,7 +24,6 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: 10fe9931dd9c7944a731b63fa73bdbecfb5182ae26502a856fc620459744ffa0
       labels:
         app.kubernetes.io/name: mimir
         app.kubernetes.io/instance: metamonitoring-values

@@ -42,7 +42,6 @@ spec:
         app.kubernetes.io/component: compactor
         app.kubernetes.io/part-of: memberlist
       annotations:
-        checksum/config: cefe7d1a3ad2bff42c206a41b78205aa2a997675b00a4158c0b4f89118009934
       namespace: "citestns"
     spec:
       serviceAccountName: proxy-gem-values-mimir

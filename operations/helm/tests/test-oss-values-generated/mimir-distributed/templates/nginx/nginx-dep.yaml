@@ -24,7 +24,6 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: 4a7a8f9a1d0e35e3b58055d977cdd5bf7e5133d11eecfc92f31ccf2774f36dff
         minio-secret-version: "42"
       labels:
         app.kubernetes.io/name: mimir
