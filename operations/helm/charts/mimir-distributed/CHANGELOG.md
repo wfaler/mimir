@@ -27,7 +27,8 @@ Entries should include a reference to the Pull Request that introduced the chang
 
 ## main / unreleased
 
-* [FEATURE] Add `proxy` section that will soon replace `nginx` and `gateway`. For a migration guide refer to https://grafana.com/docs/mimir/latest/operators-guide/deploying-grafana-mimir/migrate-to-unified-proxy-deployment/
+* [FEATURE] Add `proxy` section that will soon replace `nginx` and `gateway`. For a migration guide refer to
+  [Migrate to using the unified proxy deployment for NGINX and GEM gateway](https://grafana.com/docs/mimir/latest/operators-guide/deploying-grafana-mimir/migrate-to-unified-proxy-deployment/)
 * [ENHANCEMENT] Metamonitoring: If enabled and no URL is configured, then metamonitoring metrics will be sent to
   Mimir under the `metamonitoring` tenant; this enhancement does not apply to GEM. #3176
 * [ENHANCEMENT] The GEM gateway can now be disabled via the `gateway.enabled` value.
