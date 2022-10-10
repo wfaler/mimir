@@ -340,8 +340,9 @@ func TestBlocksStoreReplicationSet_GetClientsFor(t *testing.T) {
 			reg := prometheus.NewPedanticRegistry()
 			cfg := ClientConfig{
 				PoolConfig: PoolConfig{
-					CleanupPeriod: time.Second,
-					RemoteTimeout: time.Second,
+					dialAsync:     true, // make the dialing async since it will fail if we try to connect to localhost
+					CleanupPeriod: time.Minute,
+					RemoteTimeout: time.Minute,
 				},
 			}
 			s, err := newBlocksStoreReplicationSet(r, noLoadBalancing, limits, cfg, log.NewNopLogger(), reg)
@@ -406,6 +407,7 @@ func TestBlocksStoreReplicationSet_GetClientsFor_ShouldSupportRandomLoadBalancin
 	reg := prometheus.NewPedanticRegistry()
 	cfg := ClientConfig{
 		PoolConfig: PoolConfig{
+			dialAsync:     true, // make the dialing async since it will fail if we try to connect to localhost
 			CleanupPeriod: time.Second,
 			RemoteTimeout: time.Second,
 		},

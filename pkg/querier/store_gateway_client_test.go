@@ -45,7 +45,7 @@ func Test_newStoreGatewayClientFactory(t *testing.T) {
 	flagext.DefaultValues(&cfg)
 
 	reg := prometheus.NewPedanticRegistry()
-	factory := newStoreGatewayClientFactory(cfg, time.Minute, reg)
+	factory := newStoreGatewayClientFactory(cfg, PoolConfig{RemoteTimeout: time.Second, CleanupPeriod: time.Second}, reg)
 
 	for i := 0; i < 2; i++ {
 		client, err := factory(listener.Addr().String())

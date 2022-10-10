@@ -23,7 +23,7 @@ import (
 	"github.com/grafana/mimir/pkg/storegateway/storegatewaypb"
 )
 
-func newStoreGatewayClientFactory(clientCfg grpcclient.Config, dialTimeout time.Duration, reg prometheus.Registerer) client.PoolFactory {
+func newStoreGatewayClientFactory(clientCfg grpcclient.Config, poolCfg PoolConfig, reg prometheus.Registerer) client.PoolFactory {
 	requestDuration := promauto.With(reg).NewHistogramVec(prometheus.HistogramOpts{
 		Namespace:   "cortex",
 		Name:        "storegateway_client_request_duration_seconds",
@@ -33,18 +33,20 @@ func newStoreGatewayClientFactory(clientCfg grpcclient.Config, dialTimeout time.
 	}, []string{"operation", "status_code"})
 
 	return func(addr string) (client.PoolClient, error) {
-		return dialStoreGatewayClient(clientCfg, addr, dialTimeout, requestDuration)
+		return dialStoreGatewayClient(clientCfg, addr, poolCfg, requestDuration)
 	}
 }
 
-func dialStoreGatewayClient(clientCfg grpcclient.Config, addr string, dialTimeout time.Duration, requestDuration *prometheus.HistogramVec) (*storeGatewayClient, error) {
+func dialStoreGatewayClient(clientCfg grpcclient.Config, addr string, poolCfg PoolConfig, requestDuration *prometheus.HistogramVec) (*storeGatewayClient, error) {
 	opts, err := clientCfg.DialOption(grpcclient.Instrument(requestDuration))
 	if err != nil {
 		return nil, err
 	}
-	opts = append(opts, grpc.WithBlock())
+	if !poolCfg.dialAsync {
+		opts = append(opts, grpc.WithBlock())
+	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), dialTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), poolCfg.RemoteTimeout)
 	defer cancel()
 
 	conn, err := grpc.DialContext(ctx, addr, opts...)
@@ -79,7 +81,7 @@ func (c *storeGatewayClient) RemoteAddress() string {
 
 func newStoreGatewayClientPool(discovery client.PoolServiceDiscovery, clientConfig ClientConfig, logger log.Logger, reg prometheus.Registerer) *client.Pool {
 	// We prefer sane defaults instead of exposing further config options.
-	clientCfg := grpcclient.Config{
+	grpcCfg := grpcclient.Config{
 		MaxRecvMsgSize:      100 << 20,
 		MaxSendMsgSize:      16 << 20,
 		GRPCCompression:     "",
@@ -102,11 +104,12 @@ func newStoreGatewayClientPool(discovery client.PoolServiceDiscovery, clientConf
 		ConstLabels: map[string]string{"client": "querier"},
 	})
 
-	return client.NewPool("store-gateway", poolCfg, discovery, newStoreGatewayClientFactory(clientCfg, poolCfg.HealthCheckTimeout, reg), clientsCount, logger)
+	return client.NewPool("store-gateway", poolCfg, discovery, newStoreGatewayClientFactory(grpcCfg, clientConfig.PoolConfig, reg), clientsCount, logger)
 }
 
 // PoolConfig is config for creating a Pool of gRPC clients.
 type PoolConfig struct {
+	dialAsync     bool
 	CleanupPeriod time.Duration `yaml:"cleanup_period" category:"advanced"`
 	RemoteTimeout time.Duration `yaml:"remote_timeout" category:"advanced"`
 }
