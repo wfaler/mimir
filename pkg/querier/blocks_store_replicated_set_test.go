@@ -338,7 +338,13 @@ func TestBlocksStoreReplicationSet_GetClientsFor(t *testing.T) {
 			}
 
 			reg := prometheus.NewPedanticRegistry()
-			s, err := newBlocksStoreReplicationSet(r, noLoadBalancing, limits, ClientConfig{}, log.NewNopLogger(), reg)
+			cfg := ClientConfig{
+				PoolConfig: PoolConfig{
+					CleanupPeriod: time.Second,
+					RemoteTimeout: time.Second,
+				},
+			}
+			s, err := newBlocksStoreReplicationSet(r, noLoadBalancing, limits, cfg, log.NewNopLogger(), reg)
 			require.NoError(t, err)
 			require.NoError(t, services.StartAndAwaitRunning(ctx, s))
 			defer services.StopAndAwaitTerminated(ctx, s) //nolint:errcheck
@@ -398,7 +404,13 @@ func TestBlocksStoreReplicationSet_GetClientsFor_ShouldSupportRandomLoadBalancin
 
 	limits := &blocksStoreLimitsMock{storeGatewayTenantShardSize: 0}
 	reg := prometheus.NewPedanticRegistry()
-	s, err := newBlocksStoreReplicationSet(r, randomLoadBalancing, limits, ClientConfig{}, log.NewNopLogger(), reg)
+	cfg := ClientConfig{
+		PoolConfig: PoolConfig{
+			CleanupPeriod: time.Second,
+			RemoteTimeout: time.Second,
+		},
+	}
+	s, err := newBlocksStoreReplicationSet(r, randomLoadBalancing, limits, cfg, log.NewNopLogger(), reg)
 	require.NoError(t, err)
 	require.NoError(t, services.StartAndAwaitRunning(ctx, s))
 	defer services.StopAndAwaitTerminated(ctx, s) //nolint:errcheck
