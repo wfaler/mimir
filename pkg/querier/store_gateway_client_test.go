@@ -9,6 +9,7 @@ import (
 	"context"
 	"net"
 	"testing"
+	"time"
 
 	"github.com/grafana/dskit/flagext"
 	"github.com/grafana/dskit/grpcclient"
@@ -44,7 +45,7 @@ func Test_newStoreGatewayClientFactory(t *testing.T) {
 	flagext.DefaultValues(&cfg)
 
 	reg := prometheus.NewPedanticRegistry()
-	factory := newStoreGatewayClientFactory(cfg, reg)
+	factory := newStoreGatewayClientFactory(cfg, time.Minute, reg)
 
 	for i := 0; i < 2; i++ {
 		client, err := factory(listener.Addr().String())
