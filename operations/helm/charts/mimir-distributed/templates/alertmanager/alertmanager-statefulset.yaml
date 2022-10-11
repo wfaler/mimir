@@ -47,7 +47,7 @@ spec:
         {{- include "mimir.podAnnotations" (dict "ctx" . "component" "alertmanager") | nindent 8 }}
       namespace: {{ .Release.Namespace | quote }}
     spec:
-      {{- if .Values.ingester.persistentVolume.enabled }}
+      {{- if .Values.alertmanager.persistentVolume.enabled }}
       {{- if .Values.schedulerName }}
       schedulerName: "{{ .Values.schedulerName }}"
       {{- end }}
