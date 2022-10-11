@@ -138,7 +138,41 @@ Make sure that the version of the `mimir-distributed` Helm chart that you have i
         replicas: 10
       ```
 
-   4. Move the rest of your values according the following table:
+   4. Update the readiness probe endpoint if you are overriding `nginx.nginxConfig`.
+      
+      The readiness probe in the `gateway` setup uses the `/ready` endpoint on the containers. Version 4.0.0 of 
+      `mimir-distributed` configures the NGINX to serve this endpoint. In versions prior to that that endpoint 
+      does not exist. If you have copied the contents of `nginx.nginxConfig` into your values file prior 
+      to version 4.0.0, then you need to correct the readiness probe.
+
+      After carrying out this step the Helm values for `gateway` should look like the following:
+
+      ```yaml
+      gateway:
+        readinessProbe:
+          httpGet:
+            path: /
+        service:
+          annotations:
+            networking.istio.io/exportTo: admin
+          nameOverride: mimir-nginx
+        ingress:
+          enabled: true
+          nameOverride: mimir-nginx
+          hosts:
+            - host: mimir.example.com
+              paths:
+                - path: /
+                  pathType: Prefix
+          tls:
+            - secretName: mimir-gateway-tls
+              hosts:
+                - mimir.example.com
+        enabledNonEnterprise: true
+        replicas: 10
+      ```
+
+   5. Move the rest of your values according the following table:
 
       | Deprecated field                      | New field                               | Notes                                                                  |
       | ------------------------------------- | --------------------------------------- | ---------------------------------------------------------------------- |
@@ -174,7 +208,7 @@ Make sure that the version of the `mimir-distributed` Helm chart that you have i
       | `nginx.topologySpreadConstraints`     | `gateway.topologySpreadConstraints`     |                                                                        |
       | `nginx.verboseLogging`                | `gateway.nginx.verboseLogging`          | Nested under `proxy.nginx`.                                            |
 
-   5. Upgrade the Helm release with the migrated values file `custom.yaml`. This concludes the migration.
+   6. Upgrade the Helm release with the migrated values file `custom.yaml`. This concludes the migration.
 
       ```bash
       helm upgrade $RELEASE grafana/mimir-distributed -f custom.yaml

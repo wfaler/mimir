@@ -61,7 +61,7 @@ spec:
               protocol: TCP
           readinessProbe:
             httpGet:
-              path: /
+              path: /ready
               port: http-metrics
             initialDelaySeconds: 15
             timeoutSeconds: 1
