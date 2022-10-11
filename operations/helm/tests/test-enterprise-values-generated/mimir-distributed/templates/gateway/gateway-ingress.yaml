@@ -13,10 +13,10 @@ metadata:
 spec:
   tls:
     - hosts:
-        - "gateway.gem.example.com"
-      secretName: gem-gateway-tls
+        - "mimir.example.com"
+      secretName: mimir-tls
   rules:
-    - host: "gateway.gem.example.com"
+    - host: "mimir.example.com"
       http:
         paths:
           - path: /

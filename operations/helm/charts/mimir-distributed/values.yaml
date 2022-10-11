@@ -194,7 +194,7 @@ mimir:
       frontend_address: {{ template "mimir.fullname" . }}-query-frontend-headless.{{ .Release.Namespace }}.svc:{{ include "mimir.serverGrpcListenPort" . }}
       {{- end }}
 
-    {{- if and .Values.enterprise.enabled .Values.gateway.useDefaultProxyURLs }}
+    {{- if and .Values.enterprise.enabled }}
     gateway:
       proxy:
         admin_api:
@@ -1646,7 +1646,7 @@ nginx:
     clusterIP: null
     # -- Node port if service type is NodePort
     nodePort: null
-    # -- Load balancer IPO address if service type is LoadBalancer
+    # -- Load balancer IP address if service type is LoadBalancer
     loadBalancerIP: null
     # -- Annotations for the nginx service
     annotations: {}
@@ -1856,9 +1856,12 @@ nginx:
 
 # -- A reverse proxy deployment that is meant to receive traffic for Mimir or GEM.
 # When enterprise.enabled is true the GEM gateway is deployed. Otherwise, it is an nginx.
-# Options except those under proxy.nginx apply to both versions - nginx and GEM gateway.
-proxy:
-  enabled: false
+# Options except those under gateway.nginx apply to both versions - nginx and GEM gateway.
+gateway:
+  # -- The gateway is deployed by default for enterprise installations (enterprise.enabled=true).
+  # Toggle this to have it deployed for non-enterprise versions too.
+  enabledNonEnterprise: false
+
   # -- Number of replicas for the Deployment
   replicas: 1
 
@@ -1874,7 +1877,7 @@ proxy:
   # ref: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
   strategy:
     type: RollingUpdate
-
+    # rollingUpdate:
     #   maxSurge: 25%
     #   maxUnavailable: 25%
 
@@ -1926,7 +1929,7 @@ proxy:
     allowPrivilegeEscalation: false
   # -- Resource requests and limits for the container
   resources: {}
-  # -- Grace period to allow the proxy container to shut down before it is killed
+  # -- Grace period to allow the gateway container to shut down before it is killed
   terminationGracePeriodSeconds: 30
 
   affinity: {}
@@ -1945,7 +1948,7 @@ proxy:
   nodeSelector: {}
   # -- Tolerations for Deployment Pods
   tolerations: []
-  # -- Proxy Service configuration
+  # -- Gateway Service configuration
   service:
     # -- Port on which the Service listens
     port: 80
@@ -1955,7 +1958,7 @@ proxy:
     clusterIP: null
     # -- Node port if service type is NodePort
     nodePort: null
-    # -- Load balancer IPO address if service type is LoadBalancer
+    # -- Load balancer IP address if service type is LoadBalancer
     loadBalancerIP: null
     # -- Annotations for the Service
     annotations: {}
@@ -2040,8 +2043,8 @@ proxy:
       # The value is templated using `tpl`. Override this to use a custom htpasswd, e.g. in case the default causes
       # high CPU load.
       htpasswd: >-
-        {{ htpasswd (required "'nginx.basicAuth.username' is required" .Values.nginx.basicAuth.username) (required "'nginx.basicAuth.password' is required" .Values.nginx.basicAuth.password) }}
-      # -- Name of an existing basic auth secret to use instead of proxy.nginx.basicAuth.htpasswd. Must contain '.htpasswd' key
+        {{ htpasswd (required "'gateway.nginx.basicAuth.username' is required" .Values.gateway.nginx.basicAuth.username) (required "'gateway.nginx.basicAuth.password' is required" .Values.gateway.nginx.basicAuth.password) }}
+      # -- Name of an existing basic auth secret to use instead of gateway.nginx.basicAuth.htpasswd. Must contain '.htpasswd' key
       existingSecret: null
 
     config:
@@ -2075,9 +2078,9 @@ proxy:
           scgi_temp_path        /tmp/scgi_temp;
 
           default_type application/octet-stream;
-          log_format   {{ .Values.proxy.nginx.config.logFormat }}
+          log_format   {{ .Values.gateway.nginx.config.logFormat }}
 
-          {{- if .Values.proxy.nginx.verboseLogging }}
+          {{- if .Values.gateway.nginx.verboseLogging }}
           access_log   /dev/stderr  main;
           {{- else }}
 
@@ -2091,13 +2094,13 @@ proxy:
           sendfile     on;
           tcp_nopush   on;
 
-          {{- if .Values.proxy.nginx.config.resolver }}
-          resolver {{ .Values.proxy.nginx.config.resolver }};
+          {{- if .Values.gateway.nginx.config.resolver }}
+          resolver {{ .Values.gateway.nginx.config.resolver }};
           {{- else }}
           resolver {{ .Values.global.dnsService }}.{{ .Values.global.dnsNamespace }}.svc.{{ .Values.global.clusterDomain }};
           {{- end }}
 
-          {{- with .Values.proxy.nginx.config.httpSnippet }}
+          {{- with .Values.gateway.nginx.config.httpSnippet }}
           {{ . | nindent 2 }}
           {{- end }}
 
@@ -2110,7 +2113,7 @@ proxy:
           server {
             listen {{ include "mimir.serverHttpListenPort" . }};
 
-            {{- if .Values.proxy.nginx.basicAuth.enabled }}
+            {{- if .Values.gateway.nginx.basicAuth.enabled }}
             auth_basic           "Mimir";
             auth_basic_user_file /etc/nginx/secrets/.htpasswd;
             {{- end }}
@@ -2171,7 +2174,7 @@ proxy:
               proxy_pass      http://{{ template "mimir.fullname" . }}-compactor.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:{{ include "mimir.serverHttpListenPort" . }}$request_uri;
             }
 
-            {{- with .Values.proxy.nginx.config.serverSnippet }}
+            {{- with .Values.gateway.nginx.config.serverSnippet }}
             {{ . | nindent 4 }}
             {{- end }}
           }
@@ -2429,106 +2432,6 @@ admin_api:
   extraVolumeMounts: []
   env: []
   extraEnvFrom: []
-
-# -- DEPRECATED: use the 'proxy' section instead. For a migration guide refer to
-# https://grafana.com/docs/mimir/latest/operators-guide/deploying-grafana-mimir/migrate-to-unified-proxy-deployment/
-#
-# Settings for the gateway service providing
-# authentication and authorization. Is automatically enabled when enterprise.enabled is true. Requires license.
-gateway:
-  # -- Takes effects only if enterprise.enabled=true
-  enabled: true
-  # If you want to use your own proxy URLs, set this to false.
-  useDefaultProxyURLs: true
-  replicas: 1
-
-  annotations: {}
-  service:
-    annotations: {}
-    labels: {}
-    # -- Port the gateway service listens on
-    port: 80
-    # -- DEPRECATED Legacy compatibility port the gateway service listens on, set to 'null' to disable
-    legacyPort: 8080
-
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 0
-      maxUnavailable: 1
-
-  podLabels: {}
-  podAnnotations: {}
-
-  # Pod Disruption Budget
-  podDisruptionBudget: {}
-
-  # -- The name of the PriorityClass for gateway pods
-  priorityClassName: null
-
-  nodeSelector: {}
-  affinity: {}
-
-  # -- topologySpreadConstraints allows to customize part of the default topologySpreadConstraints. labelSelectors
-  # is generated by the chart using the same selectors as services.
-  topologySpreadConstraints: {}
-  #  maxSkew: 1
-  #  topologyKey: kubernetes.io/hostname
-  #  whenUnsatisfiable: ScheduleAnyway
-
-  securityContext: {}
-
-  # -- The SecurityContext for gateway containers
-  containerSecurityContext:
-    readOnlyRootFilesystem: true
-
-  initContainers: []
-
-  extraArgs: {}
-
-  persistence:
-    subPath:
-
-  readinessProbe:
-    httpGet:
-      path: /ready
-      port: http-metrics
-    initialDelaySeconds: 45
-
-  resources:
-    requests:
-      cpu: 10m
-      memory: 32Mi
-
-  terminationGracePeriodSeconds: 60
-
-  tolerations: []
-  extraContainers: []
-  extraVolumes: []
-  extraVolumeMounts: []
-  env: []
-  extraEnvFrom: []
-
-  # Ingress configuration
-  ingress:
-    # -- Specifies whether an ingress for the gateway should be created
-    enabled: false
-    # -- Ingress Class Name. MAY be required for Kubernetes versions >= 1.18
-    # ingressClassName: gateway
-    # -- Annotations for the gateway ingress
-    annotations: {}
-    # -- Hosts configuration for the gateway ingress
-    hosts:
-      - host: gateway.gem.example.com
-        paths:
-          - path: /
-            # -- pathType (e.g. ImplementationSpecific, Prefix, .. etc.) might also be required by some Ingress Controllers
-            # pathType: Prefix
-    # -- TLS configuration for the gateway ingress
-    tls:
-      - secretName: gem-gateway-tls
-        hosts:
-          - gateway.gem.example.com
 
 graphite:
   # -- If true, enables graphite querier and graphite write proxy functionality.
