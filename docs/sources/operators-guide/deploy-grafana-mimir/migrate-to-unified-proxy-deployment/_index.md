@@ -9,18 +9,18 @@ aliases:
 
 # Migrate to the unified gateway deployment for NGINX and GEM gateway in Helm
 
-Version 4.0.0 of the `mimir-distributed` Helm chart adds a new way to deploy the NGINX reverse proxy in front of 
-Mimir. The NGINX configuration was unified with the GEM (Grafana Enterprise Metrics) gateway configuration. Using a 
+Version 4.0.0 of the `mimir-distributed` Helm chart adds a new way to deploy the NGINX reverse proxy in front of
+Mimir. The NGINX configuration was unified with the GEM (Grafana Enterprise Metrics) gateway configuration. Using a
 single section makes it possible to migrate from Mimir to GEM without downtime.
 
-The unification also brings new features to the GEM gateway: OpenShift Route and horizontal autoscaling of the 
-gateway Pods. 
+The unification also brings new features to the GEM gateway: OpenShift Route and horizontal autoscaling of the
+gateway Pods.
 
-The unified configuration lives in the `gateway` section of the values file. The introduction of the new section 
+The unified configuration lives in the `gateway` section of the values file. The introduction of the new section
 also deprecates the `nginx` section. It will be removed in `mimir-distributed` version 7.0.0.
 
-It is possible to migrate from `nginx` to the `gateway` configuration without downtime too. The migration should take 
-less than 30 minutes. The rest of this article contains a procedure for migrating from the old `nignx` section to 
+It is possible to migrate from `nginx` to the `gateway` configuration without downtime too. The migration should take
+less than 30 minutes. The rest of this article contains a procedure for migrating from the old `nignx` section to
 `gateway`.
 
 ## Before you begin
@@ -194,7 +194,7 @@ nginx:
     rollingUpdate:
       maxSurge: 100%
       maxUnavailable: 10%
- 
+
   affinity: |
     podAntiAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -212,7 +212,7 @@ nginx:
         configMapKeyRef:
           name: special-config
           key: SPECIAL_TYPE
-          
+
   basicAuth:
     enabled: true
     username: user
@@ -226,10 +226,10 @@ nginx:
       main '$remote_addr - $remote_user [$time_local]  $status '
       '"$request" $body_bytes_sent "$http_referer" '
       '"$http_user_agent" "$http_x_forwarded_for"';
-  
+
   podSecurityContext:
     readOnlyRootFilesystem: true
-    
+
   ingress:
     enabled: true
     hosts:
@@ -248,7 +248,7 @@ The Helm values file after finishing the migration:
 ```yaml
 nginx:
   enabled: false
-  
+
 gateway:
   enabledNonEnterprise: true
   replicas: 4
@@ -262,13 +262,13 @@ gateway:
   affinity:
     podAntiAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
-      - labelSelector:
-          matchExpressions:
-            - key: noisyNeighbour
-              operator: In
-              values:
-                - 'true'
-        topologyKey: 'kubernetes.io/hostname'
+        - labelSelector:
+            matchExpressions:
+              - key: noisyNeighbour
+                operator: In
+                values:
+                  - "true"
+          topologyKey: "kubernetes.io/hostname"
 
   env:
     - name: SPECIAL_TYPE_KEY
