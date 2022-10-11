@@ -1,7 +1,7 @@
 ---
 title: "Prepare Grafana Mimir for production using the Helm chart"
 aliases:
-- docs/mimir/latest/operators-guide/run-production-environment-with-helm/
+  - docs/mimir/latest/operators-guide/run-production-environment-with-helm/
 menuTitle: "Prepare Grafana Mimir for production using the Helm chart"
 description: "Prepare Grafana Mimir to ingest metrics in a production environment using the mimir-distributed Helm chart."
 weight: 90
@@ -31,6 +31,7 @@ Meet all the follow prerequisites:
   helm repo add grafana https://grafana.github.io/helm-charts
   helm repo update
   ```
+
 - You have an external object storage that is different from the MinIO
   object storage that `mimir-distributed` deploys, because the MinIO
   deployment in the Helm chart is only intended for getting started and is not intended for production use.
@@ -55,8 +56,8 @@ To get a better idea of how to plan capacity, refer to the YAML comments at
 the beginning of `small.yaml` and `large.yaml` files, which relate to read and write workloads.
 See also [Planning Grafana Mimir capacity]({{< relref "../run-production-environment/planning-capacity.md" >}}).
 
-[//]: # (todo maybe add the actual text from either of the docs; ask ursula how 
-to deduplicate)
+[//]: # "todo maybe add the actual text from either of the docs; ask ursula how to deduplicate"
+
 To use a sizing plan, copy it from the [mimir](https://github.com/grafana/mimir/blob/main/operations/helm/charts/mimir-distributed)
 GitHub repository, and pass it as a values file to the `helm` command.
 
@@ -110,7 +111,7 @@ To benefit from zone-awareness, choose the node selectors for your different
 zones. For convenience, you can use the following YAML configuration snippet
 as a starting point:
 
-[//]: # (TODO: check if this is actually the correct yaml after github.com/grafana/mimir/pull/2778 is merged)
+[//]: # "TODO: check if this is actually the correct yaml after github.com/grafana/mimir/pull/2778 is merged"
 
 ```yaml
 ingester:
