@@ -360,7 +360,6 @@ Examples:
   "metadata-cache" "metadata-cache"
   "nginx" "nginx"
   "overrides-exporter" "overrides_exporter"
-  "proxy" "proxy"
   "querier" "querier"
   "query-frontend" "query_frontend"
   "query-scheduler" "query_scheduler"
