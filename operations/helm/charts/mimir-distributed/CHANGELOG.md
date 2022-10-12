@@ -27,7 +27,7 @@ Entries should include a reference to the Pull Request that introduced the chang
 
 * [ENHANCEMENT] Metamonitoring: If enabled and no URL is configured, then metamonitoring metrics will be sent to
   Mimir under the `metamonitoring` tenant; this enhancement does not apply to GEM. #3176
-* [ENHANCEMENT] Add ability to manage PrometheusRule from helm chart. #2134
+* [ENHANCEMENT] Add ability to manage PrometheusRule for meta monitoring with Prometheus operator from the Helm chart. #2134
 * [BUGFIX] Fix an issue that caused metamonitoring secrets to be created incorrectly #3170
 
 ## 3.2.0
