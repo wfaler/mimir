@@ -2921,6 +2921,7 @@ func TestHaDedupeMiddleware(t *testing.T) {
 		ctx               context.Context
 		enableHaTracker   bool
 		acceptHaSamples   bool
+		haMaxClusters     int
 		reqs              []*mimirpb.WriteRequest
 		expectedReqs      []*mimirpb.WriteRequest
 		expectedNextCalls int
@@ -2980,6 +2981,7 @@ func TestHaDedupeMiddleware(t *testing.T) {
 			ctx:             ctxWithUser,
 			enableHaTracker: true,
 			acceptHaSamples: true,
+			haMaxClusters:   1,
 			reqs: []*mimirpb.WriteRequest{
 				makeWriteRequestForGenerators(5, labelSetGenWithReplicaAndCluster(replica1, cluster1), nil, nil),
 				makeWriteRequestForGenerators(5, labelSetGenWithReplicaAndCluster(replica2, cluster1), nil, nil),
@@ -2989,6 +2991,30 @@ func TestHaDedupeMiddleware(t *testing.T) {
 			expectedReqs:      []*mimirpb.WriteRequest{makeWriteRequestForGenerators(5, labelSetGenWithCluster(cluster1), nil, nil)},
 			expectedNextCalls: 1,
 			expectErrs:        []int{0, 202, 400, 400},
+		}, {
+			name:            "perform partial HA deduplication",
+			ctx:             ctxWithUser,
+			enableHaTracker: true,
+			acceptHaSamples: true,
+			reqs: func() []*mimirpb.WriteRequest {
+				r1 := makeWriteRequestForGenerators(1, labelSetGenWithReplicaAndCluster(replica1, cluster1), nil, nil)
+				r2 := makeWriteRequestForGenerators(1, labelSetGenWithReplicaAndCluster(replica2, cluster1), nil, nil)
+				r3 := makeWriteRequestForGenerators(1, labelSetGenWithReplicaAndCluster(replica1, cluster2), nil, nil)
+				r4 := makeWriteRequestForGenerators(1, labelSetGenWithReplicaAndCluster(replica2, cluster2), nil, nil)
+
+				r1.Timeseries = append(r1.Timeseries, r2.Timeseries...)
+				r1.Timeseries = append(r1.Timeseries, r3.Timeseries...)
+				r1.Timeseries = append(r1.Timeseries, r4.Timeseries...)
+				return []*mimirpb.WriteRequest{r1}
+			}(),
+			expectedReqs: func() []*mimirpb.WriteRequest {
+				c1 := makeWriteRequestForGenerators(1, labelSetGenWithCluster(cluster1), nil, nil)
+				c2 := makeWriteRequestForGenerators(1, labelSetGenWithCluster(cluster2), nil, nil)
+				c1.Timeseries = append(c1.Timeseries, c2.Timeseries...)
+				return []*mimirpb.WriteRequest{c1}
+			}(),
+			expectedNextCalls: 1,
+			expectErrs:        []int{202},
 		},
 	}
 
@@ -3012,7 +3038,7 @@ func TestHaDedupeMiddleware(t *testing.T) {
 			flagext.DefaultValues(&limits)
 			limits.AcceptHASamples = tc.acceptHaSamples
 			limits.MaxLabelValueLength = 15
-			limits.HAMaxClusters = 1
+			limits.HAMaxClusters = tc.haMaxClusters
 
 			ds, _, _ := prepare(t, prepConfig{
 				numDistributors: 1,
@@ -3027,7 +3053,13 @@ func TestHaDedupeMiddleware(t *testing.T) {
 				gotErrs = append(gotErrs, err)
 			}
 
-			assert.Equal(t, tc.expectedReqs, gotReqs)
+			assert.Len(t, gotReqs, len(tc.expectedReqs))
+			for i := range gotReqs {
+				assert.ElementsMatch(t, tc.expectedReqs[i].Timeseries, gotReqs[i].Timeseries)
+				assert.ElementsMatch(t, tc.expectedReqs[i].Metadata, gotReqs[i].Metadata)
+				assert.Equal(t, tc.expectedReqs[i].SkipLabelNameValidation, gotReqs[i].SkipLabelNameValidation)
+				assert.Equal(t, tc.expectedReqs[i].Source, gotReqs[i].Source)
+			}
 			assert.Len(t, gotErrs, len(tc.expectErrs))
 			for errIdx, expectErr := range tc.expectErrs {
 				if expectErr > 0 {
