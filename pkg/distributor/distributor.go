@@ -25,6 +25,7 @@ import (
 	ring_client "github.com/grafana/dskit/ring/client"
 	"github.com/grafana/dskit/services"
 	"github.com/opentracing/opentracing-go"
+	opentracing_log "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -695,17 +696,7 @@ func (d *Distributor) prePushHaDedupeMiddleware(next push.Func) push.Func {
 		perReplicaSeries := map[haReplica][]mimirpb.PreallocTimeseries{}
 
 		for _, ts := range req.Timeseries {
-
 			cluster, replica := findHALabels(haReplicaLabel, haClusterLabel, ts.Labels)
-
-			// Make a copy of these, since they may be retained as labels on our metrics, e.g. dedupedSamples.
-			cluster, replica = copyString(cluster), copyString(replica)
-
-			span := opentracing.SpanFromContext(ctx)
-			if span != nil {
-				span.SetTag("cluster", cluster)
-				span.SetTag("replica", replica)
-			}
 
 			replicaKey := haReplica{replica: replica, cluster: cluster}
 			replicaSeries := perReplicaSeries[replicaKey]
@@ -720,11 +711,20 @@ func (d *Distributor) prePushHaDedupeMiddleware(next push.Func) push.Func {
 		var seriesToPush []mimirpb.PreallocTimeseries
 		for replicaKey, series := range perReplicaSeries {
 			cluster, replica := replicaKey.cluster, replicaKey.replica
+
+			if span := opentracing.SpanFromContext(ctx); span != nil {
+				// Make a copy of these, since they may be retained as tags
+				span.LogFields(
+					opentracing_log.String("cluster", copyString(cluster)),
+					opentracing_log.String("replica", copyString(replica)),
+				)
+			}
+
 			removeReplica, err := d.checkSample(ctx, userID, cluster, replica)
 			if err != nil {
 				if errors.Is(err, replicasNotMatchError{}) {
 					// These samples have been deduped.
-					deduplicatedSamples[replicaKey.cluster] += len(series)
+					deduplicatedSamples[cluster] += len(series)
 					continue
 				}
 
@@ -752,6 +752,7 @@ func (d *Distributor) prePushHaDedupeMiddleware(next push.Func) push.Func {
 		}
 
 		for cluster, samples := range deduplicatedSamples {
+			cluster = copyString(cluster) // Make a copy of these, since they may be retained as labels on our metrics
 			d.dedupedSamples.WithLabelValues(userID, cluster).Add(float64(samples))
 		}
 		d.nonHASamples.WithLabelValues(userID).Add(float64(nonHASamples))
