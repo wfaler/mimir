@@ -20,6 +20,7 @@ import (
 	"github.com/go-kit/log/level"
 	"github.com/grafana/dskit/kv"
 	"github.com/grafana/dskit/limiter"
+	"github.com/grafana/dskit/multierror"
 	"github.com/grafana/dskit/ring"
 	ring_client "github.com/grafana/dskit/ring/client"
 	"github.com/grafana/dskit/services"
@@ -711,10 +712,10 @@ func (d *Distributor) prePushHaDedupeMiddleware(next push.Func) push.Func {
 			replicaSeries = append(replicaSeries, ts)
 			perReplicaSeries[replicaKey] = replicaSeries
 		}
-		numSamples := 0
-		for _, ts := range req.Timeseries {
-			numSamples += len(ts.Samples)
-		}
+		deduplicatedSamples := make(map[string]int, len(perReplicaSeries))
+		numSamplesForTooManyHaClusters := 0
+		nonHASamples := 0
+		var tooManyClustersErr error
 
 		var seriesToPush []mimirpb.PreallocTimeseries
 		for replicaKey, series := range perReplicaSeries {
@@ -723,13 +724,14 @@ func (d *Distributor) prePushHaDedupeMiddleware(next push.Func) push.Func {
 			if err != nil {
 				if errors.Is(err, replicasNotMatchError{}) {
 					// These samples have been deduped.
-					d.dedupedSamples.WithLabelValues(userID, cluster).Add(float64(numSamples))
-					return nil, httpgrpc.Errorf(http.StatusAccepted, err.Error())
+					deduplicatedSamples[replicaKey.cluster] += len(series)
+					continue
 				}
 
 				if errors.Is(err, tooManyClustersError{}) {
-					d.discardedSamplesTooManyHaClusters.WithLabelValues(userID).Add(float64(numSamples))
-					return nil, httpgrpc.Errorf(http.StatusBadRequest, err.Error())
+					numSamplesForTooManyHaClusters += len(series)
+					tooManyClustersErr = err
+					continue
 				}
 
 				return nil, err
@@ -745,18 +747,43 @@ func (d *Distributor) prePushHaDedupeMiddleware(next push.Func) push.Func {
 				seriesToPush = append(seriesToPush, series...)
 			} else {
 				// If there wasn't an error but removeReplica is false that means we didn't find both HA labels.
-				d.nonHASamples.WithLabelValues(userID).Add(float64(numSamples))
-				continue
+				nonHASamples += len(series)
 			}
 		}
-		cleanupInDefer = false
-		r := &mimirpb.WriteRequest{
-			Timeseries:              seriesToPush,
-			Source:                  req.Source,
-			Metadata:                req.Metadata,
-			SkipLabelNameValidation: req.SkipLabelNameValidation,
+
+		for cluster, samples := range deduplicatedSamples {
+			d.dedupedSamples.WithLabelValues(userID, cluster).Add(float64(samples))
 		}
-		return next(ctx, r, cleanup)
+		d.nonHASamples.WithLabelValues(userID).Add(float64(nonHASamples))
+		d.discardedSamplesTooManyHaClusters.WithLabelValues(userID).Add(float64(numSamplesForTooManyHaClusters))
+
+		var resp *mimirpb.WriteResponse
+		if len(seriesToPush) > 0 {
+			cleanupInDefer = false
+			r := &mimirpb.WriteRequest{
+				Timeseries:              seriesToPush,
+				Source:                  req.Source,
+				Metadata:                req.Metadata,
+				SkipLabelNameValidation: req.SkipLabelNameValidation,
+			}
+			resp, err = next(ctx, r, cleanup)
+		}
+		if tooManyClustersErr != nil {
+			if err != nil {
+				err = multierror.New(err, tooManyClustersErr).Err()
+			} else {
+				err = tooManyClustersErr
+			}
+			err = httpgrpc.Errorf(http.StatusBadRequest, err.Error())
+		}
+		if len(deduplicatedSamples) > 0 {
+			if err != nil {
+				err = httpgrpc.Errorf(http.StatusAccepted, err.Error())
+			} else {
+				err = httpgrpc.Errorf(http.StatusAccepted, replicasNotMatchError{}.Error())
+			}
+		}
+		return resp, err
 	}
 }
 
