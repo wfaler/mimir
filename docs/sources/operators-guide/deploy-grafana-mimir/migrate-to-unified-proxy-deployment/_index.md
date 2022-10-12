@@ -139,10 +139,10 @@ Make sure that the version of the `mimir-distributed` Helm chart that you have i
       ```
 
    4. Update the readiness probe endpoint if you are overriding `nginx.nginxConfig`.
-      
-      The readiness probe in the `gateway` setup uses the `/ready` endpoint on the containers. Version 4.0.0 of 
-      `mimir-distributed` configures the NGINX to serve this endpoint. In versions prior to that that endpoint 
-      does not exist. If you have copied the contents of `nginx.nginxConfig` into your values file prior 
+
+      The readiness probe in the `gateway` setup uses the `/ready` endpoint on the containers. Version 4.0.0 of
+      `mimir-distributed` configures the NGINX to serve this endpoint. In versions prior to that that endpoint
+      does not exist. If you have copied the contents of `nginx.nginxConfig` into your values file prior
       to version 4.0.0, then you need to correct the readiness probe.
 
       After carrying out this step the Helm values for `gateway` should look like the following:
