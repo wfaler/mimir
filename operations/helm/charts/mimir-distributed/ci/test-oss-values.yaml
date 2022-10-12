@@ -9,6 +9,11 @@ ci_resources: &ci_resources
 nginx:
   ingress:
     enabled: true
+    hosts:
+      - host: nginx.mimir.example.com
+        paths:
+          - path: /
+            pathType: Prefix
 
 global:
   extraEnvFrom:

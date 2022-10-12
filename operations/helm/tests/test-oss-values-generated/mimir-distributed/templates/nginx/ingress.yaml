@@ -16,11 +16,11 @@ spec:
         - "nginx.loki.example.com"
       secretName: loki-nginx-tls
   rules:
-    - host: "nginx.loki.example.com"
+    - host: "nginx.mimir.example.com"
       http:
         paths:
           - path: /
-            pathType: 
+            pathType: Prefix
             backend:
               service:
                 name: test-oss-values-mimir-nginx
