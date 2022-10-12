@@ -16,8 +16,8 @@ single section makes it possible to migrate from Mimir to GEM without downtime.
 The unification also brings new features to the GEM gateway: OpenShift Route and horizontal autoscaling of the
 gateway Pods.
 
-The unified configuration lives in the `gateway` section of the values file. The introduction of the new section
-also deprecates the `nginx` section. It will be removed in `mimir-distributed` version 7.0.0.
+The unified configuration lives in the `gateway` section of the values file. With this we also
+deprecate the `nginx` section. It will be removed in `mimir-distributed` version 7.0.0.
 
 It is possible to migrate from `nginx` to the `gateway` configuration without downtime too. The migration should take
 less than 30 minutes. The rest of this article contains a procedure for migrating from the old `nignx` section to
@@ -96,7 +96,7 @@ Make sure that the version of the `mimir-distributed` Helm chart that you have i
         replicas: 10
       ```
 
-   3. Copy the `service` section from `nginx` to `proxy` and override the name. Override the name to
+   3. Copy the `service` section from `nginx` to `gateway` and override the name. Override the name to
       the name of the Service resource that the chart created for NGINX.
 
       Reusing the name allows the `helm` command to retain the existing resource instead of deleting it and
