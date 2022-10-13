@@ -24,7 +24,7 @@
 alertmanager:
   persistentVolume:
     enabled: true
-  replicas: 1
+  replicas: 2
   resources:
     limits:
       memory: 1.4Gi
