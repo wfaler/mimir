@@ -5,7 +5,7 @@
 ### Grafana Mimir
 
 * [ENHANCEMENT] Distributor: Add age filter to forwarding functionality, to not forward samples which are older than defined duration. If such samples are not ingested, `cortex_discarded_samples_total{reason="forwarded-sample-too-old"}` is increased. #3049 #3133
-* [ENHANCEMENT] Alerts: added `RulerRemoteEvaluationFailing` alert, firing when communication between ruler and frontend fails in remote operational mode. #3177
+* [ENHANCEMENT] Alerts: Added `RulerRemoteEvaluationFailing` alert, which fires when communication between the ruler and the frontend fails in remote operational mode. #3177
 * [BUGFIX] Flusher: Add `Overrides` as a dependency to prevent panics when starting with `-target=flusher`. #3151
 
 ### Mixin
