@@ -42,7 +42,7 @@ It also assumes that you have an understanding of what the `kubectl` command doe
 
 This installation will not succeed if you have enabled the
 [PodSecurityPolicy admission controller](https://v1-23.docs.kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#podsecuritypolicy)
-or if you are enforcing the Restricted policy with [Pod Security Admission](https://v1-24.docs.kubernetes.io/docs/concepts/security/pod-security-admission/#pod-security-admission-labels-for-namespaces).
+or if you are enforcing the Restricted policy with [Pod Security](https://v1-24.docs.kubernetes.io/docs/concepts/security/pod-security-admission/#pod-security-admission-labels-for-namespaces) admission controller.
 The reason is that the installation includes a deployment of MinIO. The [minio/minio chart](https://github.com/minio/minio/tree/master/helm/minio)
 is not compatible with running under a Restricted policy or the PodSecurityPolicy that the mimir-distributed chart provides.
 
