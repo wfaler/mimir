@@ -50,7 +50,7 @@ If you are using the PodSecurityPolicy admission controller, then it is not poss
 Refer to [Run Grafana Mimir in production using the Helm chart]({{< relref "../../running-production-environment-with-helm" >}}) for instructions on
 setting up an external object storage and disable the built-in MinIO deployment with `minio.enabled: false` in the Helm values file.
 
-If you are using Pod Security Admission, then MinIO and the mimir-distributed chart can successfully deploy under a Baseline policy.
+If you are using the [Pod Security](https://kubernetes.io/docs/concepts/security/pod-security-admission/) admission controller, then MinIO and the mimir-distributed chart can successfully deploy under a with the [baseline](https://kubernetes.io/docs/concepts/security/pod-security-admission/#pod-security-levels) pod security level.
 
 ## Install the Helm chart in a custom namespace
 
