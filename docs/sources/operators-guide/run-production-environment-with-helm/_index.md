@@ -111,8 +111,6 @@ To benefit from zone-awareness, choose the node selectors for your different
 zones. For convenience, you can use the following YAML configuration snippet
 as a starting point:
 
-[//]: # "TODO: check if this is actually the correct yaml after github.com/grafana/mimir/pull/2778 is merged"
-
 ```yaml
 ingester:
   zoneAwareReplication:
@@ -121,13 +119,13 @@ ingester:
     zones:
       - name: zone-a
         nodeSelector:
-          topology.kubernetes.io/zone: zone-a
+          topology.kubernetes.io/zone: us-central1-a
       - name: zone-b
         nodeSelector:
-          topology.kubernetes.io/zone: zone-b
+          topology.kubernetes.io/zone: us-central1-b
       - name: zone-c
         nodeSelector:
-          topology.kubernetes.io/zone: zone-c
+          topology.kubernetes.io/zone: us-central1-c
 
 store_gateway:
   zoneAwareReplication:
@@ -136,13 +134,13 @@ store_gateway:
     zones:
       - name: zone-a
         nodeSelector:
-          topology.kubernetes.io/zone: zone-a
+          topology.kubernetes.io/zone: us-central1-a
       - name: zone-b
         nodeSelector:
-          topology.kubernetes.io/zone: zone-b
+          topology.kubernetes.io/zone: us-central1-b
       - name: zone-c
         nodeSelector:
-          topology.kubernetes.io/zone: zone-c
+          topology.kubernetes.io/zone: us-central1-c
 ```
 
 ### Existing installations
