@@ -239,7 +239,8 @@ Metrics) server.
    ```
 
 3. Add the following YAML snippet to your
-   values file, to send metamonitoring telemetry from Mimir:
+   values file, to send metamonitoring telemetry from Mimir. Change the URLs and credentials to match your desired 
+   destination.
 
    ```yaml
    metaMonitoring:
@@ -264,6 +265,9 @@ Metrics) server.
 
    For details about how to set up the credentials, see [Collecting
    metrics and logs from Grafana Mimir]({{< relref "../monitor-grafana-mimir/collecting-metrics-and-logs/">}}).
+
+   To send metamonitoring metrics back to Mimir remove the `metaMonitoring.grafanaAgent.metrics` section from your 
+   values file. The chart will automatically send the metrics to the Mimir installation.
 
 Your Grafana Mimir cluster can now ingest metrics in production.
 
