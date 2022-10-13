@@ -39,6 +39,7 @@ spec:
         target: alertmanager
         release: test-enterprise-legacy-label-values
       annotations:
+        checksum/alertmanager-fallback-config: c5955348548e7a22ec180bf22f733d403623675d1ae142747c53efd88c8349bf
       namespace: "citestns"
     spec:
       serviceAccountName: test-enterprise-legacy-label-values-enterprise-metrics
