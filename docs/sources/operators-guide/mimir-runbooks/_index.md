@@ -348,7 +348,7 @@ How to **fix** it:
 
 ### MimirRulerRemoteEvaluationFailing
 
-This alert fires when communication between `ruler` and `ruler-query-frontend` is failing to be established.
+This alert fires when communication between the `ruler` and the `ruler-query-frontend` fails to become established.
 
 The `ruler-query-frontend` component is exclusively used by the `ruler` to evaluate rule expressions when running in remote operational mode. If communication between these two components breaks, gaps are expected to appear in the case of recording rules or alerting rules will not fire when they should.
 
