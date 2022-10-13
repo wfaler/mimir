@@ -354,11 +354,11 @@ The `ruler-query-frontend` component is exclusively used by the `ruler` to evalu
 
 How to **investigate**:
 
-- Check the `Mimir / Remote ruler reads` dashboard to see if the issue is caused by failures or high latency
+- Check the `Mimir / Remote ruler reads` dashboard to see if the issue is caused by failures or high latency:
   - **Failures**
-    - Check the `ruler-query-frontend` logs to find out more details about the error
+    - Check the `ruler-query-frontend` logs to find out more details about the error.
   - **High latency**
-    - Check the `Mimir / Remote ruler reads resources` dashboard to see if CPU or Memory usage increased unexpectedly
+    - Check the `Mimir / Remote ruler reads resources` dashboard to see if CPU or memory usage increased unexpectedly.
 
 ### MimirIngesterHasNotShippedBlocks
 
