@@ -21,8 +21,6 @@ spec:
       app.kubernetes.io/instance: small-values
       app.kubernetes.io/component: querier
   strategy:
-    rollingUpdate:
-      maxUnavailable: 0
     type: RollingUpdate
   template:
     metadata:
