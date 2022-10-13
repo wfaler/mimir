@@ -118,10 +118,6 @@ querier:
     requests:
       cpu: 2
       memory: 4Gi
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 0
 
 query_frontend:
   replicas: 1
@@ -131,10 +127,6 @@ query_frontend:
     requests:
       cpu: 2
       memory: 2Gi
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 0
 
 ruler:
   replicas: 1
