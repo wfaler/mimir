@@ -16,14 +16,14 @@ for production.
 
 Although the information that follows assumes that you are using Grafana Mimir in
 a production environment that is customer-facing, you might need the
-high-availability and horizontal-scalability features of Grafana Mimir in an
+high-availability and horizontal-scalability features of Grafana Mimir even in an
 internal, development environment.
 
 ## Before you begin
 
 Meet all the follow prerequisites:
 
-- You are familiar with [Helm](https://helm.sh/docs/intro/quickstart/).
+- You are familiar with [Helm 3.x](https://helm.sh/docs/intro/quickstart/).
 
   Add the grafana Helm repository to your local environment or to your CI/CD tooling:
 
