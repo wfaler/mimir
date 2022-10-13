@@ -56,10 +56,10 @@ To get a better idea of how to plan capacity, refer to the YAML comments at
 the beginning of `small.yaml` and `large.yaml` files, which relate to read and write workloads.
 See also [Planning Grafana Mimir capacity]({{< relref "../run-production-environment/planning-capacity.md" >}}).
 
-[//]: # "todo maybe add the actual text from either of the docs; ask ursula how to deduplicate"
-
 To use a sizing plan, copy it from the [mimir](https://github.com/grafana/mimir/blob/main/operations/helm/charts/mimir-distributed)
-GitHub repository, and pass it as a values file to the `helm` command.
+GitHub repository, and pass it as a values file to the `helm` command. Note that sizing plans may change with new 
+versions of the `mimir-distributed` chart. Make sure to use a sizing plan from a version close to the version of the 
+Helm chart that you are installing.
 
 For example:
 
