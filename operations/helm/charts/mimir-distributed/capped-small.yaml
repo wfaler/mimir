@@ -147,7 +147,7 @@ ruler:
 store_gateway:
   persistentVolume:
     size: 10Gi
-  replicas: 2
+  replicas: 3
   resources:
     limits:
       cpu: 1.4
