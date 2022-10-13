@@ -12,19 +12,8 @@ metadata:
     {} 
   namespace: "citestns"
 data:
-  fallback-config.yaml: |
-    global:
-        smtp_smarthost: 'localhost:25'
-        smtp_from: 'alertmanager@example.org'
-        smtp_auth_username: 'alertmanager'
-        smtp_auth_password: 'password'
-    route:
-        receiver: 'default-receiver'
-        group_wait: 30s
-        group_interval: 5m
-        repeat_interval: 4h
-        group_by: [cluster, alertname]
+  alertmanager_fallback_config.yaml: |
     receivers:
-        - name: 'default-receiver'
-          email_configs:
-          - to: 'alerts@example.org'
+        - name: default-receiver
+    route:
+        receiver: default-receiver

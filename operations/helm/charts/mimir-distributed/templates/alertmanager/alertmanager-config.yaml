@@ -10,7 +10,7 @@ metadata:
   {{- toYaml .Values.alertmanager.annotations | nindent 4 }} 
   namespace: {{ .Release.Namespace | quote }}
 data:
-  fallback-config.yaml: |
+  alertmanager_fallback_config.yaml: |
     {{- .Values.alertmanager.fallbackConfig | nindent 4 }}
 {{- end -}}
 {{- end -}}

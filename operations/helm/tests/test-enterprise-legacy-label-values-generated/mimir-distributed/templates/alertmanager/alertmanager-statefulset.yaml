@@ -71,11 +71,11 @@ spec:
         - name: runtime-config
           configMap:
             name: test-enterprise-legacy-label-values-enterprise-metrics-runtime
-        - name: fallback-config
-          configMap:
-            name: test-enterprise-legacy-label-values-enterprise-metrics-alertmanager-fallback-config
         - name: tmp
           emptyDir: {}
+        - name: alertmanager-fallback-config
+          configMap:
+            name: test-enterprise-legacy-label-values-enterprise-metrics-alertmanager-fallback-config
       containers:
         - name: alertmanager
           imagePullPolicy: IfNotPresent
@@ -92,8 +92,8 @@ spec:
               mountPath: /var/enterprise-metrics
             - name: storage
               mountPath: "/data"
-            - name: fallback-config
-              mountPath: /etc/alertmanager/fallback-config.yaml
+            - name: alertmanager-fallback-config
+              mountPath: /configs/alertmanager_fallback_config.yaml
               subPath: fallback-config.yaml
             - name: tmp
               mountPath: /tmp

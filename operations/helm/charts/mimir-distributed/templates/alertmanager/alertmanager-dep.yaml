@@ -65,8 +65,8 @@ spec:
               mountPath: "/data"
               subPath: {{ .Values.alertmanager.persistence.subPath }}
             {{- if .Values.alertmanager.fallbackConfig }}
-            - name: fallback-config
-              mountPath: /etc/alertmanager/fallback-config.yaml
+            - name: alertmanager-fallback-config
+              mountPath: /configs/alertmanager_fallback_config.yaml
               subPath: fallback-config.yaml
             {{- end }}
             - name: tmp
@@ -132,7 +132,7 @@ spec:
         - name: storage
           emptyDir: {}
         {{- if .Values.alertmanager.fallbackConfig }}
-        - name: fallback-config
+        - name: alertmanager-fallback-config
           configMap:
             name: {{ include "mimir.resourceName" (dict "ctx" . "component" "alertmanager") }}-fallback-config
         {{- end }}
