@@ -794,9 +794,9 @@ func (d *Distributor) prePushHaDedupeMiddleware(next push.Func) push.Func {
 		}
 
 		// We don't want to send samples beyond the last accepted sample - that was deduplicated
-		req.Timeseries = req.Timeseries[:lastAccepted+1]
 		{
 			originalLen := len(req.Timeseries)
+			req.Timeseries = req.Timeseries[:lastAccepted+1]
 			cleanup = func() {
 				// Restore the length so that we can put back all the series in the request to the memory pool
 				req.Timeseries = req.Timeseries[:originalLen]
