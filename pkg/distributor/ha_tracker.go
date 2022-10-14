@@ -439,7 +439,6 @@ func (h *haTracker) checkReplica(ctx context.Context, userID, cluster, replica s
 		return tooManyClustersError{limit: limit}
 	}
 
-	// TODO this is probably bad if we do it per sample
 	err := h.updateKVStore(ctx, userID, cluster, replica, now)
 	if err != nil {
 		level.Error(h.logger).Log("msg", "failed to update KVStore - rejecting sample", "err", err)
