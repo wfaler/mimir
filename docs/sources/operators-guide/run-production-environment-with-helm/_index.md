@@ -258,16 +258,13 @@ Metrics) server.
 
        metrics:
          remote:
-           url: "https://mimir-nginx.mimir.svc.cluster.local./api/v1/push"
+           url: "https://prometehus.prometheus.svc.cluster.local./api/v1/push"
            headers:
              X-Scope-OrgID: metamonitoring
    ```
 
    For details about how to set up the credentials, see [Collecting
    metrics and logs from Grafana Mimir]({{< relref "../monitor-grafana-mimir/collecting-metrics-and-logs/">}}).
-
-   To send metamonitoring metrics back to Mimir remove the `metaMonitoring.grafanaAgent.metrics` section from your 
-   values file. The chart will automatically send the metrics to the Mimir installation.
 
 Your Grafana Mimir cluster can now ingest metrics in production.
 
